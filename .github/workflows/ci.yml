@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "agent/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Compile
+        run: python -m compileall -q app.py tests
+
+      - name: Application smoke test
+        run: python tests/test_smoke.py
+
+      - name: NIMPH parser test
+        run: python tests/test_sensor_parser.py

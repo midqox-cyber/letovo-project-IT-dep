@@ -1,0 +1,1892 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GreenNet Crisis</title>
+<style>
+  :root{
+    --ground:#0a0a0b; --surface:#131316; --surface-2:#1a1a1e; --surface-3:#232329;
+    --border:#2a2a30; --border-strong:#38383f;
+    --text:#f2f2f0; --text-dim:#9a9aa0; --text-faint:#5f5f66;
+    --accent:#f04e23; --accent-soft:rgba(240,78,35,.14); --accent-strong:#ff6038;
+    --c-green:#3fbf6a;  --c-green-soft:rgba(63,191,106,.15);
+    --c-red:#e5484d;    --c-red-soft:rgba(229,72,77,.15);
+    --c-amber:#f2b01e;  --c-amber-soft:rgba(242,176,30,.15);
+    --c-blue:#4a8ff0;   --c-blue-soft:rgba(74,143,240,.15);
+    --c-purple:#a06ef0; --c-purple-soft:rgba(160,110,240,.16);
+    --ok:#3fbf6a; --warn:#f2b01e; --crit:#e5484d;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --radius:10px; --radius-sm:7px;
+    --mono:"Cascadia Code","Cascadia Mono",Consolas,"SF Mono","JetBrains Mono","Roboto Mono",ui-monospace,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --ground:#f4f4f2; --surface:#ffffff; --surface-2:#f6f6f4; --surface-3:#eeeeeb;
+      --border:#e2e2de; --border-strong:#cfcfca;
+      --text:#17171a; --text-dim:#5c5c62; --text-faint:#8a8a90;
+      --accent:#d8420f; --accent-soft:rgba(216,66,15,.10); --accent-strong:#b8350a;
+      --c-green:#1f9d51; --c-green-soft:rgba(31,157,81,.12);
+      --c-red:#d43a3f; --c-red-soft:rgba(212,58,63,.10);
+      --c-amber:#c98800; --c-amber-soft:rgba(201,136,0,.12);
+      --c-blue:#2f6fd6; --c-blue-soft:rgba(47,111,214,.10);
+      --c-purple:#7e4fd1; --c-purple-soft:rgba(126,79,209,.12);
+      --shadow:0 8px 24px rgba(18,32,27,.10);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0a0a0b; --surface:#131316; --surface-2:#1a1a1e; --surface-3:#232329;
+    --border:#2a2a30; --border-strong:#38383f; --text:#f2f2f0; --text-dim:#9a9aa0; --text-faint:#5f5f66;
+    --accent:#f04e23; --accent-soft:rgba(240,78,35,.14); --accent-strong:#ff6038;
+    --c-green:#3fbf6a; --c-green-soft:rgba(63,191,106,.15); --c-red:#e5484d; --c-red-soft:rgba(229,72,77,.15);
+    --c-amber:#f2b01e; --c-amber-soft:rgba(242,176,30,.15); --c-blue:#4a8ff0; --c-blue-soft:rgba(74,143,240,.15);
+    --c-purple:#a06ef0; --c-purple-soft:rgba(160,110,240,.16); --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  :root[data-theme="light"]{
+    --ground:#f4f4f2; --surface:#ffffff; --surface-2:#f6f6f4; --surface-3:#eeeeeb;
+    --border:#e2e2de; --border-strong:#cfcfca; --text:#17171a; --text-dim:#5c5c62; --text-faint:#8a8a90;
+    --accent:#d8420f; --accent-soft:rgba(216,66,15,.10); --accent-strong:#b8350a;
+    --c-green:#1f9d51; --c-green-soft:rgba(31,157,81,.12); --c-red:#d43a3f; --c-red-soft:rgba(212,58,63,.10);
+    --c-amber:#c98800; --c-amber-soft:rgba(201,136,0,.12); --c-blue:#2f6fd6; --c-blue-soft:rgba(47,111,214,.10);
+    --c-purple:#7e4fd1; --c-purple-soft:rgba(126,79,209,.12); --shadow:0 8px 24px rgba(18,32,27,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; padding:0}
+  body{font-family:var(--sans); color:var(--text); background:var(--ground); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+  button{cursor:pointer; font-family:inherit}
+  .mono{font-family:var(--mono)}
+  .lbl{font-family:var(--mono); text-transform:uppercase; letter-spacing:.12em; font-size:10.5px; color:var(--text-dim); font-weight:600}
+  .tnum{font-variant-numeric:tabular-nums}
+  h1,h2,h3,h4{margin:0; font-weight:650; text-wrap:balance}
+  ::selection{background:var(--accent-soft)}
+  a{color:var(--accent-strong)}
+
+  .shell{display:grid; grid-template-columns:74px minmax(0,1fr) 318px; grid-template-rows:56px minmax(0,1fr);
+    grid-template-areas:"rail top top" "rail main side"; height:100vh; max-height:100vh; overflow:hidden}
+  .top{grid-area:top; display:flex; align-items:center; gap:16px; padding:0 18px; background:var(--surface); border-bottom:1px solid var(--border); min-width:0}
+  .incident{display:flex; align-items:center; gap:11px; min-width:0}
+  .pulse-dot{width:9px; height:9px; border-radius:50%; background:var(--crit); flex:none; box-shadow:0 0 0 0 rgba(229,72,77,.5); animation:ring 2s infinite}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(229,72,77,.45)}70%{box-shadow:0 0 0 8px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+  @media (prefers-reduced-motion: reduce){.pulse-dot{animation:none} .marker.focus::after{animation:none} .live-dot{animation:none}}
+  .incident .name{font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .incident .code{color:var(--text-dim)}
+  .top-spacer{flex:1}
+  .clock{font-family:var(--mono); font-size:15px; letter-spacing:.04em}
+  .clock .zone{color:var(--text-faint); font-size:11px; margin-left:6px}
+  .live{display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint)}
+  .live-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); animation:blink 2.4s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .who-box{display:flex; align-items:center; gap:9px; padding:5px 8px 5px 11px; background:var(--surface-2); border:1px solid var(--border); border-radius:100px}
+  .who-box .who{display:flex; flex-direction:column; line-height:1.15; text-align:right}
+  .who-box .who b{font-size:12.5px}
+  .avatar{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:12px; color:#fff; background:var(--accent); flex:none}
+  .icon-btn{width:34px; height:34px; border-radius:8px; background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim); display:grid; place-items:center; font-size:15px}
+  .icon-btn:hover{color:var(--text); border-color:var(--border-strong)}
+  .icon-btn svg{width:16px;height:16px}
+
+  .rail{grid-area:rail; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:12px 0; gap:6px}
+  .brand{width:40px; height:40px; border-radius:11px; display:grid; place-items:center; margin-bottom:8px; background:linear-gradient(150deg,var(--accent),#b8330f); color:#fff}
+  .brand svg{width:23px; height:23px}
+  .nav-b{width:52px; padding:9px 0 7px; border-radius:11px; background:transparent; border:1px solid transparent; color:var(--text-dim); display:flex; flex-direction:column; align-items:center; gap:4px; position:relative}
+  .nav-b svg{width:20px; height:20px}
+  .nav-b span{font-family:var(--mono); font-size:8.5px; text-transform:uppercase; letter-spacing:.05em}
+  .nav-b:hover{color:var(--text); background:var(--surface-2)}
+  .nav-b.on{color:var(--accent-strong); background:var(--accent-soft); border-color:var(--border)}
+  .nav-b .badge{position:absolute; top:3px; right:8px; min-width:16px; height:16px; padding:0 4px; border-radius:9px; background:var(--crit); color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; font-family:var(--mono); border:2px solid var(--surface)}
+  .rail-sp{flex:1}
+
+  .main{grid-area:main; overflow-y:auto; overflow-x:hidden; padding:18px 20px 40px}
+  .main::-webkit-scrollbar,.side::-webkit-scrollbar{width:9px}
+  .main::-webkit-scrollbar-thumb,.side::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:9px}
+  .view-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap}
+  .view-head .htext h2{font-size:19px; letter-spacing:-.01em}
+  .view-head .htext p{color:var(--text-dim); font-size:12.5px; margin-top:3px; max-width:62ch}
+
+  .side{grid-area:side; background:var(--surface); border-left:1px solid var(--border); overflow-y:auto; padding:16px 15px 30px; display:flex; flex-direction:column; gap:16px}
+  .panel{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:13px}
+  .panel > .lbl{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px}
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 11px}
+  .stat .n{font-family:var(--mono); font-size:23px; font-weight:600; line-height:1; letter-spacing:-.02em}
+  .stat .k{font-size:10.5px; color:var(--text-dim); margin-top:5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.05em}
+  .stat.crit .n{color:var(--crit)} .stat.warn .n{color:var(--warn)} .stat.acc .n{color:var(--accent-strong)} .stat.blue .n{color:var(--c-blue)}
+  .ai{background:linear-gradient(180deg,var(--accent-soft),transparent 60%),var(--surface-2)}
+  .ai-note{font-size:10.5px; color:var(--text-faint); margin:-4px 0 11px; line-height:1.45}
+  .insight{display:flex; gap:9px; padding:9px 0; border-top:1px solid var(--border)}
+  .insight:first-of-type{border-top:none}
+  .insight .ic{width:22px; height:22px; border-radius:6px; flex:none; display:grid; place-items:center; font-size:12px; margin-top:1px}
+  .insight .tx{font-size:12px; line-height:1.45; color:var(--text-dim)}
+  .insight .tx b{color:var(--text)}
+
+  .btn{display:inline-flex; align-items:center; gap:7px; padding:8px 13px; border-radius:8px; font-size:12.5px; font-weight:600; border:1px solid var(--border); background:var(--surface-2); color:var(--text)}
+  .btn:hover{border-color:var(--border-strong); background:var(--surface-3)}
+  .btn svg{width:15px; height:15px}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.primary:hover{background:var(--accent-strong)}
+  .btn.sm{padding:5px 9px; font-size:11.5px}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:var(--c-red); border-color:transparent}
+  .btn.danger:hover{background:var(--c-red-soft)}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+
+  .filters{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px}
+  .chip{display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:100px; font-size:12px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim); font-weight:600}
+  .chip .d{width:8px; height:8px; border-radius:50%}
+  .chip:hover{color:var(--text)}
+  .chip.on{color:var(--text); border-color:var(--border-strong); background:var(--surface-2)}
+  .chip.on[data-on-color]{box-shadow:inset 0 0 0 1px currentColor}
+
+  .composer{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px; margin-bottom:16px}
+  .type-pick{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:11px}
+  .tp{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; font-size:11.5px; font-weight:600; border:1px solid var(--border); background:var(--surface-2); color:var(--text-dim)}
+  .tp .d{width:8px;height:8px;border-radius:50%}
+  .tp.on{color:var(--text); border-color:currentColor}
+  .tp:disabled{opacity:.35; cursor:not-allowed}
+  .composer textarea{width:100%; min-height:62px; resize:vertical; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:10px 11px; font-family:inherit; font-size:13.5px; line-height:1.5}
+  .composer textarea:focus{outline:none; border-color:var(--accent)}
+  .composer .row2{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; flex-wrap:wrap}
+  .cap-hint{font-size:11px; color:var(--text-faint); display:flex; align-items:center; gap:6px}
+  .cap-hint svg{width:12px;height:12px}
+
+  .feed{display:flex; flex-direction:column; gap:11px}
+  .msg{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:13px 14px; border-left:3px solid var(--mc,var(--border))}
+  .msg-top{display:flex; align-items:center; gap:9px; margin-bottom:7px; flex-wrap:wrap}
+  .type-tag{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:100px; color:var(--mc); background:var(--mc-soft)}
+  .type-tag .d{width:8px; height:8px; border-radius:50%; background:var(--mc)}
+  .msg-top .author{font-weight:650; font-size:12.5px}
+  .msg-top .dept{color:var(--text-dim); font-size:11.5px}
+  .msg-top .time{color:var(--text-faint); font-family:var(--mono); font-size:11px; margin-left:auto}
+  .msg-body{font-size:13.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+  .msg-foot{display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap}
+  .vstate{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:3px 9px; border-radius:6px}
+  .vstate.unverified{color:var(--warn); background:var(--c-amber-soft)}
+  .vstate.verified{color:var(--ok); background:var(--c-green-soft)}
+  .vstate.rejected{color:var(--crit); background:var(--c-red-soft)}
+  .vstate svg{width:12px;height:12px}
+  .msg-foot .by{font-size:11px; color:var(--text-faint)}
+  .msg-foot .acts{margin-left:auto; display:flex; gap:7px}
+  .empty{text-align:center; padding:40px 20px; color:var(--text-faint)}
+  .empty svg{width:34px; height:34px; opacity:.5; margin-bottom:10px}
+
+  .board{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px}
+  .col{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:11px; min-height:120px}
+  .col-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px}
+  .col-h .t{display:flex; align-items:center; gap:8px; font-family:var(--mono); text-transform:uppercase; font-size:11px; letter-spacing:.06em; font-weight:700}
+  .col-h .t .d{width:9px; height:9px; border-radius:3px}
+  .col-h .cnt{font-family:var(--mono); font-size:11px; color:var(--text-faint)}
+  .col.new .d{background:var(--text-dim)} .col.prog .d{background:var(--c-blue)} .col.done .d{background:var(--ok)}
+  .task{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px; margin-bottom:9px}
+  .task:last-child{margin-bottom:0}
+  .task h4{font-size:13px; margin-bottom:6px; line-height:1.35}
+  .task.done h4{text-decoration:line-through; color:var(--text-dim)}
+  .task .desc{font-size:11.5px; color:var(--text-dim); margin-bottom:9px; line-height:1.45}
+  .task .tmeta{display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:9px}
+  .tpill{font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; background:var(--surface-3); color:var(--text-dim); display:inline-flex; align-items:center; gap:4px}
+  .tpill.due{color:var(--warn)} .tpill.over{color:var(--crit); background:var(--c-red-soft)}
+  .task .tacts{display:flex; gap:6px; flex-wrap:wrap}
+
+  .kb-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:13px}
+  .kb-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; display:flex; flex-direction:column; gap:9px}
+  .kb-card .cat{display:inline-flex; align-items:center; gap:6px; align-self:flex-start; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; padding:3px 8px; border-radius:100px; color:var(--mc); background:var(--mc-soft)}
+  .kb-card h4{font-size:14px; line-height:1.3}
+  .kb-card .kb-body{font-size:12.5px; color:var(--text-dim); line-height:1.5}
+  .kb-card .kb-foot{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:auto; padding-top:8px; border-top:1px solid var(--border)}
+  .kb-card .kb-foot .who{font-size:11px; color:var(--text-faint)}
+  .kb-card .kb-foot .time{font-family:var(--mono); font-size:10.5px; color:var(--text-faint); margin-left:auto}
+
+  .map-wrap{display:grid; grid-template-columns:minmax(0,1fr) 210px; gap:14px}
+  .map-stage{position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; aspect-ratio:16/10; min-height:340px}
+  .map-stage svg.terrain{position:absolute; inset:0; width:100%; height:100%}
+  .marker{position:absolute; transform:translate(-50%,-50%); cursor:pointer; z-index:2}
+  .marker .mk-core{width:20px; height:20px; display:grid; place-items:center; font-size:11px}
+  .marker.focus .mk-core{width:15px; height:15px; border-radius:50%; background:var(--mk,var(--c-green)); box-shadow:0 0 12px var(--mk,var(--c-green))}
+  .marker.focus::after{content:""; position:absolute; left:50%; top:50%; width:15px; height:15px; border-radius:50%; transform:translate(-50%,-50%); background:var(--mk,var(--c-green)); opacity:.5; animation:mpulse 2.2s infinite}
+  @keyframes mpulse{0%{transform:translate(-50%,-50%) scale(1); opacity:.5}70%{transform:translate(-50%,-50%) scale(3.4); opacity:0}100%{opacity:0}}
+  .marker.lab .mk-core,.marker.drone .mk-core,.marker.team .mk-core,.marker.intake .mk-core{background:var(--surface); border:1.5px solid var(--mk); border-radius:6px; color:var(--mk); font-size:11px; width:24px; height:24px}
+  .marker.drone .mk-core{border-radius:50%}
+  .marker .mk-lb{position:absolute; left:50%; top:calc(100% + 3px); transform:translateX(-50%); white-space:nowrap; font-family:var(--mono); font-size:9.5px; color:var(--text-dim); background:var(--surface); padding:1px 5px; border-radius:4px; border:1px solid var(--border)}
+  .marker:hover{z-index:5} .marker:hover .mk-lb{color:var(--text); border-color:var(--border-strong)}
+  .safe-zone{position:absolute; transform:translate(-50%,-50%); border:1.5px dashed var(--ok); background:var(--c-green-soft); border-radius:14px; z-index:1; display:grid; place-items:end center; padding-bottom:5px}
+  .safe-zone span{font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:var(--ok)}
+  .legend{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:13px; align-self:start}
+  .legend h4{font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-dim); margin-bottom:11px}
+  .legend .lg{display:flex; align-items:center; gap:9px; padding:6px 0; font-size:12px}
+  .legend .lg .m{width:16px; height:16px; flex:none; display:grid; place-items:center; font-size:10px}
+  .legend .lg .m.dot{border-radius:50%}
+  .legend .lg .m.sq{border-radius:4px; border:1.5px solid currentColor}
+  .legend .lg small{display:block; color:var(--text-faint); font-size:10.5px}
+
+  .log-item{display:grid; grid-template-columns:58px 18px 1fr; gap:11px; align-items:start; padding:8px 0}
+  .log-item .lt{font-family:var(--mono); font-size:11.5px; color:var(--text-dim); text-align:right; padding-top:1px}
+  .log-rail{position:relative; display:grid; place-items:center}
+  .log-rail .ld{width:9px; height:9px; border-radius:50%; background:var(--accent); z-index:1; margin-top:5px; box-shadow:0 0 0 3px var(--surface)}
+  .log-rail::before{content:""; position:absolute; top:0; bottom:-16px; width:1.5px; background:var(--border)}
+  .log-item:last-child .log-rail::before{display:none}
+  .log-item .lc{font-size:12.5px; line-height:1.45; color:var(--text-dim)}
+  .log-item .lc b{color:var(--text)}
+  .log-item .lc .who{font-family:var(--mono); font-size:10.5px; color:var(--text-faint)}
+
+  /* Admin table */
+  .utable{width:100%; border-collapse:collapse; font-size:13px}
+  .utable th{text-align:left; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); padding:8px 10px; border-bottom:1px solid var(--border); font-weight:600}
+  .utable td{padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle}
+  .utable tr:hover td{background:var(--surface-2)}
+  .utable .uname{font-weight:600} .utable .ulogin{font-family:var(--mono); font-size:11.5px; color:var(--text-faint)}
+  .rolebadge{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:3px 8px; border-radius:100px; background:var(--surface-3); color:var(--text-dim)}
+  .rolebadge.r-admin{background:var(--accent-soft); color:var(--accent-strong)}
+  .miniselect{background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:5px 7px; font-family:inherit; font-size:12px}
+  .miniselect:focus{outline:none; border-color:var(--accent)}
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface)}
+  .dotstatus{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+  .dotstatus.on{background:var(--ok)} .dotstatus.off{background:var(--text-faint)}
+
+  .modal-bg{position:fixed; inset:0; background:rgba(4,10,8,.62); display:grid; place-items:center; z-index:50; padding:20px; backdrop-filter:blur(3px)}
+  .modal{background:var(--surface); border:1px solid var(--border-strong); border-radius:14px; box-shadow:var(--shadow); width:100%; max-width:480px; max-height:88vh; overflow:auto; padding:20px}
+  .modal h3{font-size:16px; margin-bottom:4px}
+  .modal .sub{color:var(--text-dim); font-size:12.5px; margin-bottom:16px}
+  .field{margin-bottom:13px}
+  .field label{display:block; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-dim); margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:9px 11px; font-family:inherit; font-size:13px}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none; border-color:var(--accent)}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .modal-acts{display:flex; gap:9px; justify-content:flex-end; margin-top:18px}
+  .form-err{color:var(--c-red); font-size:12px; margin-top:4px; min-height:16px}
+
+  /* Login */
+  .login-wrap{position:fixed; inset:0; display:grid; place-items:center; padding:22px; overflow:auto;
+    background:radial-gradient(120% 90% at 50% -10%, #10231d, var(--ground))}
+  .login-card{width:100%; max-width:410px; background:var(--surface); border:1px solid var(--border-strong); border-radius:16px; box-shadow:var(--shadow); overflow:hidden}
+  .login-hero{padding:24px 26px 18px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,var(--accent-soft),transparent)}
+  .login-hero .row{display:flex; align-items:center; gap:12px}
+  .login-hero .logo{width:44px; height:44px; border-radius:12px; background:linear-gradient(150deg,var(--accent),#b8330f); display:grid; place-items:center; color:#fff}
+  .login-hero .logo svg{width:26px;height:26px}
+  .login-hero h1{font-size:21px; letter-spacing:-.01em}
+  .login-hero h1 .mono{color:var(--accent-strong)}
+  .login-hero p{color:var(--text-dim); font-size:12px; margin-top:8px}
+  .login-body{padding:22px 26px 24px}
+  .login-body .field input{padding:11px 13px; font-size:14px}
+  .login-demo{margin-top:16px; border-top:1px solid var(--border); padding-top:14px}
+  .login-demo summary{cursor:pointer; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim)}
+  .login-demo table{width:100%; margin-top:10px; font-size:11.5px; border-collapse:collapse}
+  .login-demo td{padding:3px 6px; color:var(--text-dim)}
+  .login-demo td:first-child{font-family:var(--mono); color:var(--text)}
+  .login-demo .use{color:var(--accent-strong); cursor:pointer; text-decoration:underline}
+
+  .toast-wrap{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:90; display:flex; flex-direction:column; gap:8px; align-items:center}
+  .toast{background:var(--surface-3); border:1px solid var(--border-strong); color:var(--text); padding:9px 15px; border-radius:100px; font-size:12.5px; box-shadow:var(--shadow); display:flex; align-items:center; gap:9px; animation:tin .25s ease}
+  .toast .d{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  .toast.err .d{background:var(--c-red)}
+  @keyframes tin{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+
+  @media (max-width:1150px){ .shell{grid-template-columns:74px minmax(0,1fr); grid-template-areas:"rail top" "rail main"} .side{display:none} }
+  @media (max-width:720px){
+    .shell{grid-template-columns:1fr; grid-template-rows:52px minmax(0,1fr) 60px; grid-template-areas:"top" "main" "rail"}
+    .rail{flex-direction:row; border-right:none; border-top:1px solid var(--border); padding:0 6px; overflow-x:auto}
+    .brand,.rail-sp{display:none}
+    .nav-b{flex:1; min-width:56px; padding:7px 0 5px}
+    .board{grid-template-columns:1fr} .map-wrap{grid-template-columns:1fr}
+    .top{padding:0 12px; gap:10px} .clock .zone,.live span{display:none} .who-box .who{display:none}
+    .main{padding:14px 12px 30px}
+  }
+  /* News */
+  .news-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:13px}
+  .news-card{background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--mc); border-radius:var(--radius); padding:14px; display:flex; flex-direction:column; gap:8px}
+  .news-card.critical{background:linear-gradient(180deg,var(--mc-soft),transparent 42%),var(--surface)}
+  .nc-top{display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .nc-lv{font-family:var(--mono); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--mc); background:var(--mc-soft); padding:3px 9px; border-radius:100px}
+  .news-card h4{font-size:15px; line-height:1.25}
+  .news-card p{font-size:12.5px; color:var(--text-dim); line-height:1.5; margin:0; white-space:pre-wrap; word-break:break-word}
+  .nc-foot{display:flex; align-items:center; gap:8px; margin-top:auto; padding-top:9px; border-top:1px solid var(--border); font-size:11px; color:var(--text-faint)}
+  .nc-foot .time{margin-left:auto; font-family:var(--mono)}
+
+  /* Schedule */
+  .sched-clock{display:flex; align-items:center; gap:24px; flex-wrap:wrap; background:linear-gradient(180deg,var(--accent-soft),transparent 70%),var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:16px}
+  .big-clock{font-family:var(--mono); font-size:clamp(32px,6vw,44px); font-weight:600; letter-spacing:.02em; line-height:1}
+  .big-clock .zone{font-size:13px; color:var(--text-faint); margin-left:8px}
+  .sched-clock .lbl{margin-bottom:6px}
+  .next-ev{padding-left:24px; border-left:1px solid var(--border)}
+  .next-ev .ne-t{font-size:14px; margin-top:5px} .next-ev .ne-t b{font-family:var(--mono); color:var(--accent-strong)}
+  @media(max-width:520px){ .next-ev{padding-left:0; border-left:none} }
+  .sched-list{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:4px 15px}
+  .srow{display:grid; grid-template-columns:52px 16px 1fr auto; gap:12px; align-items:center; padding:11px 0; border-top:1px solid var(--border)}
+  .srow:first-child{border-top:none}
+  .srow .st{font-family:var(--mono); font-size:13px; color:var(--text-dim); font-weight:600}
+  .sdot{position:relative; display:grid; place-items:center; align-self:stretch}
+  .sdot i{width:9px;height:9px;border-radius:50%;background:var(--border-strong); z-index:1}
+  .sdot::before{content:"";position:absolute;top:0;bottom:0;width:1.5px;background:var(--border)}
+  .srow:first-child .sdot::before{top:50%} .srow:last-child .sdot::before{bottom:50%}
+  .srow .sc b{font-size:13.5px; display:block; line-height:1.3} .srow .sc small{font-size:11.5px; color:var(--text-faint); font-family:var(--mono)}
+  .srow.now .st{color:var(--accent-strong)} .srow.now .sdot i{background:var(--accent); box-shadow:0 0 10px var(--accent)}
+  .srow.done{opacity:.5} .srow.done .sc b{text-decoration:line-through}
+  .now-pill{font-family:var(--mono); font-size:9px; color:var(--accent-strong); border:1px solid var(--accent); border-radius:100px; padding:1px 7px; margin-left:7px; vertical-align:middle; display:inline-block}
+  .sacts{display:flex; gap:5px}
+
+  /* Side "air" panel */
+  .air-row{padding:9px 0; border-top:1px solid var(--border)}
+  .air-row:first-child{border-top:none; padding-top:0}
+  .air-k{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-faint)}
+  .air-v{font-size:12.5px; margin-top:3px; line-height:1.4} .air-v b{color:var(--accent-strong)}
+
+  /* Copyright / license */
+  .portal-login{margin-top:14px}
+  .pl-or{display:flex; align-items:center; gap:10px; color:var(--text-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.1em; margin:2px 0 12px}
+  .pl-or::before,.pl-or::after{content:""; flex:1; height:1px; background:var(--border)}
+  .portal-btn{width:100%; justify-content:center; border-color:var(--accent); color:var(--accent-strong)}
+  .portal-btn:hover{background:var(--accent-soft)}
+  #portal-box{margin-top:10px; display:flex; flex-direction:column; gap:8px}
+  #pt-token{width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:9px 11px; font-family:var(--mono); font-size:12px; line-height:1.5; resize:vertical}
+  #pt-token:focus{outline:none; border-color:var(--accent)}
+  .login-copy{margin-top:16px; padding-top:14px; border-top:1px solid var(--border); text-align:center; font-size:11px; color:var(--text-faint)}
+  .lic-link{color:var(--accent-strong); cursor:pointer; border-bottom:1px dotted currentColor}
+  .lic-link:hover{color:var(--accent)}
+  .lic-body{font-size:13px; line-height:1.6; color:var(--text-dim); display:flex; flex-direction:column; gap:10px}
+  .lic-body b{color:var(--text)}
+  .side-copy{margin-top:auto; padding-top:14px; text-align:center; font-size:10px; color:var(--text-faint); font-family:var(--mono); letter-spacing:.04em}
+
+  /* Departments + chats */
+  .depts-wrap{display:grid; grid-template-columns:300px minmax(0,1fr); gap:16px}
+  .depts-list{display:flex; flex-direction:column; gap:8px}
+  .deptc{display:flex; align-items:center; gap:12px; text-align:left; width:100%; padding:12px 13px; border-radius:12px; background:var(--surface); border:1px solid var(--border); color:var(--text)}
+  .deptc:hover{border-color:var(--border-strong); background:var(--surface-2)}
+  .deptc.on{border-color:var(--accent); background:var(--accent-soft)}
+  .deptc-ic{width:34px; height:34px; flex:none; display:grid; place-items:center; color:var(--text-dim)}
+  .deptc.on .deptc-ic{color:var(--accent-strong)}
+  .deptc-ic svg{width:22px; height:22px}
+  .deptc-t{flex:1; min-width:0}
+  .deptc-t b{font-size:13.5px; display:block; line-height:1.2}
+  .deptc-t small{color:var(--text-dim); font-size:11px; display:block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .deptc-n{font-family:var(--mono); font-size:12px; color:var(--text-faint); background:var(--surface-2); border:1px solid var(--border); border-radius:100px; min-width:26px; height:22px; display:grid; place-items:center; padding:0 6px}
+  .dept-detail{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; min-width:0}
+  .dd-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:14px; border-bottom:1px solid var(--border); margin-bottom:14px}
+  .dd-title h3{font-size:17px} .dd-title p{color:var(--text-dim); font-size:12.5px; margin-top:4px}
+  .dd-lead{display:flex; align-items:center; gap:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 12px}
+  .dd-crown{color:var(--c-amber)} .dd-crown svg{width:20px; height:20px}
+  .dd-lead small{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); display:block}
+  .dd-lead b{font-size:13px}
+  .dd-nolead{color:var(--text-faint); font-size:12px}
+  .dd-cols{display:grid; grid-template-columns:minmax(0,1fr) 210px; gap:16px}
+  .dd-lbl{display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:10px}
+  .dd-lbl svg{width:14px; height:14px}
+  .chan-feed{display:flex; flex-direction:column; gap:9px; max-height:46vh; overflow-y:auto; padding-right:4px; margin-bottom:11px}
+  .chan-msg{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:9px 11px}
+  .chan-top{display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap}
+  .chan-top b{font-size:12.5px}
+  .chan-role{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-strong); background:var(--accent-soft); padding:2px 6px; border-radius:100px}
+  .chan-time{margin-left:auto; color:var(--text-faint); font-size:11px}
+  .chan-del{background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:15px; line-height:1; padding:0 2px}
+  .chan-del:hover{color:var(--c-red)}
+  .chan-body{font-size:13px; line-height:1.5; white-space:pre-wrap; word-break:break-word}
+  .chan-composer{display:flex; flex-direction:column; gap:8px}
+  .chan-composer textarea{width:100%; min-height:54px; resize:vertical; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 11px; font-family:inherit; font-size:13px; line-height:1.5}
+  .chan-composer textarea:focus{outline:none; border-color:var(--accent)}
+  .chan-composer .btn{align-self:flex-end}
+  .dd-members{border-left:1px solid var(--border); padding-left:16px}
+  .mem{display:flex; align-items:center; gap:9px; padding:7px 0; border-bottom:1px solid var(--border)}
+  .mem:last-child{border-bottom:none}
+  .mem-av{width:26px; height:26px; flex:none; border-radius:50%; background:var(--surface-3); display:grid; place-items:center; font-size:10px; font-weight:700; color:var(--text-dim)}
+  .mem-n{flex:1; min-width:0; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:5px}
+  .mem-crown{color:var(--c-amber); display:inline-flex} .mem-crown svg{width:14px; height:14px}
+  .mem-r{font-size:10px; color:var(--text-faint); font-family:var(--mono); text-transform:uppercase; letter-spacing:.03em; white-space:nowrap}
+  .empty-sm{color:var(--text-faint); font-size:12px; text-align:center; padding:16px 0}
+  @media(max-width:900px){ .depts-wrap{grid-template-columns:1fr} .dd-cols{grid-template-columns:1fr} .dd-members{border-left:none; padding-left:0; border-top:1px solid var(--border); padding-top:12px} }
+
+  /* Finance (энеоины) */
+  .fin-total{display:flex; flex-direction:column; align-items:flex-end; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 14px}
+  .fin-total small{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint)}
+  .fin-total b{font-size:16px; color:var(--accent-strong)}
+  .fin-wrap{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:16px}
+  .acc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:16px}
+  .acc-card{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 13px}
+  .acc-d{font-size:12px; color:var(--text-dim); margin-bottom:7px; line-height:1.3; min-height:2.4em}
+  .acc-b{font-family:var(--mono); font-size:18px; font-weight:600; color:var(--text)}
+  .acc-u{font-size:11px; color:var(--text-faint)}
+  .fin-form{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px}
+  .fin-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 96px; gap:10px; margin-bottom:10px}
+  .fin-grid label{display:flex; flex-direction:column; gap:5px; min-width:0; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim)}
+  .fin-grid select,.fin-grid input,.fin-note-in{width:100%; min-width:0; max-width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 10px; font-family:var(--sans); font-size:12.5px; text-transform:none; letter-spacing:0}
+  .fin-grid select:focus,.fin-grid input:focus,.fin-note-in:focus{outline:none; border-color:var(--accent)}
+  .fin-note-in{width:100%; margin-bottom:10px; display:block}
+  .fin-form .btn{width:100%; justify-content:center}
+  .tx-list{display:flex; flex-direction:column; gap:8px; max-height:64vh; overflow-y:auto; padding-right:4px}
+  .tx-row{display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 11px}
+  .tx-ico{width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--surface-3); color:var(--text-dim); font-weight:700; font-family:var(--mono)}
+  .tx-ico.emis{background:var(--c-green-soft); color:var(--c-green)}
+  .tx-route{font-size:12.5px} .tx-route b{font-weight:700}
+  .tx-note{font-size:11px; color:var(--text-dim); margin-top:2px}
+  .tx-meta{font-size:10px; color:var(--text-faint); font-family:var(--mono); margin-top:3px}
+  .tx-amt{font-family:var(--mono); font-size:13px; font-weight:600; white-space:nowrap}
+  .dd-bal{display:flex; align-items:center; gap:9px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 12px}
+  .dd-bal-ic{color:var(--accent-strong); display:inline-flex} .dd-bal-ic svg{width:20px; height:20px}
+  .dd-bal small{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); display:block}
+  .dd-bal b{font-size:14px}
+  @media(max-width:900px){ .fin-wrap{grid-template-columns:1fr} .fin-grid{grid-template-columns:1fr 1fr} }
+
+  /* Auth tabs & registration */
+  .auth-tabs{display:flex; gap:6px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:4px; margin-bottom:16px}
+  .auth-tab{flex:1; padding:8px 6px; border-radius:7px; background:transparent; border:none; color:var(--text-dim); font-weight:600; font-size:13px; font-family:inherit; transition:background .16s ease, color .16s ease}
+  .auth-tab.on{background:var(--accent); color:#fff}
+  .terms-check{display:flex; gap:9px; align-items:flex-start; margin:2px 0 10px; font-size:12px; color:var(--text-dim); line-height:1.45; cursor:pointer}
+  .terms-check input{margin-top:1px; width:16px; height:16px; accent-color:var(--accent); flex:none}
+  .terms-check .lnk{color:var(--accent-strong); text-decoration:underline; cursor:pointer}
+  .reg-note{font-size:11px; color:var(--text-faint); background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:12px; line-height:1.4}
+
+  /* Animations */
+  @keyframes viewIn{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  @keyframes popIn{from{opacity:0; transform:scale(.965)} to{opacity:1; transform:none}}
+  @keyframes fadeBg{from{opacity:0} to{opacity:1}}
+  @keyframes floatIn{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+  #main.view-in{animation:viewIn .32s cubic-bezier(.2,.7,.2,1)}
+  .login-card{animation:popIn .42s cubic-bezier(.2,.7,.2,1)}
+  .modal{animation:popIn .22s cubic-bezier(.2,.7,.2,1)}
+  .modal-bg{animation:fadeBg .18s ease}
+  .toast{will-change:transform,opacity}
+  .msg,.kb-card,.news-card,.task,.stat{transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease}
+  .msg:hover,.kb-card:hover,.news-card:hover{transform:translateY(-2px); border-color:var(--border-strong); box-shadow:0 6px 20px rgba(0,0,0,.28)}
+  .btn{transition:transform .08s ease, background .16s ease, border-color .16s ease}
+  .btn:active{transform:translateY(1px)}
+  .icon-btn{transition:transform .12s ease, color .16s ease, border-color .16s ease}
+  .icon-btn:active{transform:scale(.9)}
+  .chip,.tp{transition:transform .1s ease, border-color .16s ease, color .16s ease, background .16s ease}
+  .chip:active,.tp:active{transform:scale(.95)}
+  .nav-b{transition:background .16s ease, color .16s ease, border-color .16s ease}
+  .nav-b.on svg{animation:popIn .3s ease}
+  .role-opt{transition:transform .12s ease, border-color .16s ease, background .16s ease}
+  .role-opt:active{transform:scale(.99)}
+  .srow.now .sdot i{transition:box-shadow .2s ease}
+
+  /* Google × Gemini visual system */
+  :root{
+    --ground:#f7f9fc; --surface:#ffffff; --surface-2:#f3f6fb; --surface-3:#e9eef7;
+    --border:#e2e8f0; --border-strong:#c9d4e3;
+    --text:#1f1f1f; --text-dim:#5f6368; --text-faint:#8b929a;
+    --accent:#1a73e8; --accent-soft:rgba(26,115,232,.10); --accent-strong:#1558b0;
+    --c-green:#1e8e5a; --c-green-soft:rgba(30,142,90,.11);
+    --c-red:#d93025; --c-red-soft:rgba(217,48,37,.10);
+    --c-amber:#e37400; --c-amber-soft:rgba(227,116,0,.11);
+    --c-blue:#1a73e8; --c-blue-soft:rgba(26,115,232,.10);
+    --c-purple:#8e63ce; --c-purple-soft:rgba(142,99,206,.11);
+    --shadow:0 8px 30px rgba(60,64,67,.13); --radius:18px; --radius-sm:13px;
+    --gemini:linear-gradient(135deg,#4285f4 4%,#7c72dc 43%,#a564c9 68%,#d96570 100%);
+    --sans:"Google Sans","Product Sans","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0f1115; --surface:#171a20; --surface-2:#1e222a; --surface-3:#292e38;
+      --border:#303641; --border-strong:#46505f; --text:#e8eaed; --text-dim:#aeb4bd; --text-faint:#737b87;
+      --accent:#8ab4f8; --accent-soft:rgba(138,180,248,.13); --accent-strong:#aecbfa;
+      --shadow:0 14px 40px rgba(0,0,0,.34);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#f7f9fc; --surface:#ffffff; --surface-2:#f3f6fb; --surface-3:#e9eef7;
+    --border:#e2e8f0; --border-strong:#c9d4e3; --text:#1f1f1f; --text-dim:#5f6368; --text-faint:#8b929a;
+    --accent:#1a73e8; --accent-soft:rgba(26,115,232,.10); --accent-strong:#1558b0;
+    --c-green:#1e8e5a; --c-green-soft:rgba(30,142,90,.11); --c-red:#d93025; --c-red-soft:rgba(217,48,37,.10);
+    --c-amber:#e37400; --c-amber-soft:rgba(227,116,0,.11); --c-blue:#1a73e8; --c-blue-soft:rgba(26,115,232,.10);
+    --c-purple:#8e63ce; --c-purple-soft:rgba(142,99,206,.11); --shadow:0 8px 30px rgba(60,64,67,.13);
+  }
+  :root[data-theme="dark"]{
+    --ground:#0f1115; --surface:#171a20; --surface-2:#1e222a; --surface-3:#292e38;
+    --border:#303641; --border-strong:#46505f; --text:#e8eaed; --text-dim:#aeb4bd; --text-faint:#737b87;
+    --accent:#8ab4f8; --accent-soft:rgba(138,180,248,.13); --accent-strong:#aecbfa;
+    --c-green:#81c995; --c-green-soft:rgba(129,201,149,.12); --c-red:#f28b82; --c-red-soft:rgba(242,139,130,.12);
+    --c-amber:#fdd663; --c-amber-soft:rgba(253,214,99,.12); --c-blue:#8ab4f8; --c-blue-soft:rgba(138,180,248,.12);
+    --c-purple:#c58af9; --c-purple-soft:rgba(197,138,249,.12); --shadow:0 14px 40px rgba(0,0,0,.34);
+  }
+  body{background:
+    radial-gradient(circle at 15% -10%,rgba(66,133,244,.12),transparent 31%),
+    radial-gradient(circle at 88% 5%,rgba(165,100,201,.10),transparent 28%),var(--ground)}
+  .top{background:color-mix(in srgb,var(--surface) 88%,transparent); backdrop-filter:blur(18px); padding-inline:22px}
+  .rail{background:color-mix(in srgb,var(--surface) 94%,transparent); padding-block:14px; gap:7px}
+  .brand,.login-hero .logo{position:relative;background:var(--gemini); box-shadow:0 8px 24px rgba(66,133,244,.24); border-radius:14px}
+  .brand::after{content:"✦"; position:absolute; color:#fff; font-size:11px; transform:translate(13px,-13px); filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+  .nav-b{border-radius:16px; transition:transform .22s cubic-bezier(.2,.8,.2,1),background .22s,color .22s}
+  .nav-b:hover{transform:translateY(-2px)}
+  .nav-b.on{border-color:transparent; box-shadow:inset 0 0 0 1px rgba(66,133,244,.08)}
+  .main{padding:24px 26px 48px}
+  .panel,.composer,.msg,.kb-card,.news-card,.task,.dept-detail,.acc-card,.fin-form,.sched-list,.map-stage,.legend,.table-wrap{
+    border-radius:var(--radius); box-shadow:0 1px 2px rgba(60,64,67,.06); transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s}
+  .panel:hover,.acc-card:hover{border-color:var(--border-strong)}
+  .btn{min-height:38px; padding:8px 16px; border-radius:999px; transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background .22s,border-color .22s}
+  .btn:hover{transform:translateY(-1px); box-shadow:0 4px 12px rgba(60,64,67,.13)}
+  .btn.primary{background:var(--gemini); border-color:transparent; box-shadow:0 4px 14px rgba(66,133,244,.22)}
+  .btn.primary:hover{background:var(--gemini); filter:saturate(1.08) brightness(1.03)}
+  .icon-btn{border-radius:50%; transition:transform .2s cubic-bezier(.2,.8,.2,1),background .2s,color .2s}
+  .icon-btn:hover{transform:rotate(4deg) scale(1.05)}
+  .who-box{border-radius:999px; background:var(--surface-2)}
+  .avatar{background:var(--gemini); box-shadow:0 3px 10px rgba(66,133,244,.22)}
+  .view-head .htext h2{font-size:clamp(21px,2vw,27px); letter-spacing:-.025em}
+  .view-head .htext p{font-size:13px; line-height:1.6}
+  .login-wrap{background:
+    radial-gradient(circle at 20% 10%,rgba(66,133,244,.20),transparent 34%),
+    radial-gradient(circle at 85% 82%,rgba(165,100,201,.18),transparent 36%),var(--ground)}
+  .login-card{max-width:480px; border-radius:28px; box-shadow:0 24px 80px rgba(60,64,67,.22); border-color:color-mix(in srgb,var(--border) 72%,transparent)}
+  .login-hero{padding:30px 32px 22px; background:linear-gradient(145deg,rgba(66,133,244,.11),rgba(165,100,201,.08),transparent)}
+  .login-body{padding:26px 32px 30px}
+  .login-hero h1 .mono{font-family:var(--sans); background:var(--gemini); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .auth-tabs{border-radius:999px; padding:5px}
+  .auth-tab{border-radius:999px; transition:transform .2s,background .25s,color .25s}
+  .auth-tab.on{background:var(--gemini); box-shadow:0 4px 13px rgba(66,133,244,.18)}
+  .field input,.field textarea,.field select,.composer textarea,.chan-composer textarea,.group-composer textarea{
+    border-radius:14px; transition:border-color .2s,box-shadow .2s,background .2s}
+  .field input:focus,.field textarea:focus,.field select:focus,.composer textarea:focus,.chan-composer textarea:focus,.group-composer textarea:focus{
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft)}
+
+  /* Group chat workspace */
+  .groups-wrap{display:grid; grid-template-columns:280px minmax(0,1fr); min-height:620px; border:1px solid var(--border); border-radius:24px; overflow:hidden; background:var(--surface); box-shadow:var(--shadow)}
+  .groups-list{padding:14px; background:var(--surface-2); border-right:1px solid var(--border); display:flex; flex-direction:column; gap:9px; min-width:0}
+  .group-card{width:100%; display:flex; align-items:center; gap:11px; padding:11px; text-align:left; border:1px solid transparent; border-radius:16px; background:transparent; color:var(--text); transition:transform .2s,background .2s,border-color .2s}
+  .group-card:hover{transform:translateX(3px); background:var(--surface); border-color:var(--border)}
+  .group-card.on{background:var(--surface); border-color:rgba(66,133,244,.28); box-shadow:0 5px 16px rgba(60,64,67,.09)}
+  .group-card-icon{width:38px; height:38px; display:grid; place-items:center; flex:none; border-radius:13px; color:#fff; background:var(--gemini)}
+  .group-card-icon svg{width:19px;height:19px}
+  .group-card-copy{min-width:0; flex:1}
+  .group-card-copy b,.group-card-copy small{display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis}
+  .group-card-copy b{font-size:13.5px}.group-card-copy small{font-size:10.5px;color:var(--text-faint);margin-top:2px}
+  .group-room{display:flex; flex-direction:column; min-width:0; min-height:0; background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 90%,var(--accent-soft)))}
+  .group-room-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:20px 22px 14px}
+  .group-room-head h3{font-size:19px}.group-room-head p{margin:3px 0 0;color:var(--text-dim);font-size:12px}
+  .danger-icon{color:var(--c-red)}
+  .group-members{display:flex; flex-wrap:wrap; gap:7px; padding:0 22px 14px; border-bottom:1px solid var(--border)}
+  .group-member{display:inline-flex; align-items:center; gap:6px; padding:4px 9px 4px 5px; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; font-size:10.5px;color:var(--text-dim)}
+  .group-member i{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-style:normal;font-size:8px;font-weight:700;color:#fff;background:var(--gemini)}
+  .group-feed{flex:1; min-height:320px; max-height:54vh; overflow-y:auto; display:flex; flex-direction:column; gap:9px; padding:20px 22px}
+  .group-message{align-self:flex-start; max-width:min(76%,650px); padding:10px 13px; border:1px solid var(--border); border-radius:6px 18px 18px 18px; background:var(--surface-2); font-size:13.5px; line-height:1.5; white-space:normal; word-break:break-word; animation:messageIn .3s cubic-bezier(.2,.8,.2,1) both}
+  .group-message>div:last-child{white-space:pre-wrap}
+  .group-message.mine{align-self:flex-end; border-radius:18px 6px 18px 18px; background:linear-gradient(135deg,rgba(66,133,244,.13),rgba(165,100,201,.10)); border-color:rgba(66,133,244,.22)}
+  .group-message-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;font-size:10.5px;color:var(--text-faint)}
+  .group-message-top b{font-size:11.5px;color:var(--text)}.group-message-top .tnum{margin-left:auto}
+  .group-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;padding:14px 22px 4px;border-top:1px solid var(--border);background:color-mix(in srgb,var(--surface) 94%,transparent)}
+  .group-composer textarea{width:100%;min-height:48px;max-height:130px;resize:vertical;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font:inherit}
+  .group-composer .btn{height:48px}
+  .composer-tip{padding:3px 23px 14px;text-align:right;color:var(--text-faint);font-size:9.5px}
+  .groups-empty{height:100%;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--text-faint);padding:28px}
+  .groups-empty svg{width:32px;height:32px;opacity:.55}.groups-empty b{color:var(--text);font-size:13px}.groups-empty span{font-size:11.5px;max-width:28ch}
+  .room-empty{min-height:320px}
+  .group-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:260px;overflow:auto;padding:3px}
+  .group-person{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);cursor:pointer;transition:border-color .2s,transform .2s}
+  .group-person:hover{transform:translateY(-1px);border-color:var(--accent)}.group-person input{width:16px;height:16px;accent-color:var(--accent)}
+  .group-person span:last-child{min-width:0}.group-person b,.group-person small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.group-person b{font-size:12px}.group-person small{font-size:9.5px;color:var(--text-faint)}
+
+  /* Live NIMPH sensor map */
+  .rail{overflow-y:auto;scrollbar-width:none}.rail::-webkit-scrollbar{display:none}
+  .sensor-view-head{align-items:flex-start}.sensor-view-head .htext{max-width:760px}.sensor-head-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+  .sensor-head-actions .btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none}.sensor-head-actions svg{width:17px;height:17px}.sensor-head-actions button:disabled{opacity:.65;cursor:wait}
+  .sensor-alert{display:flex;align-items:center;gap:8px;margin:0 0 13px;padding:11px 14px;border:1px solid var(--border);border-radius:15px;font-size:12px;line-height:1.45}
+  .sensor-alert.warning{color:color-mix(in srgb,var(--c-orange) 72%,var(--text));background:color-mix(in srgb,var(--c-orange) 10%,var(--surface));border-color:color-mix(in srgb,var(--c-orange) 27%,var(--border))}
+  .sensor-alert.error{color:color-mix(in srgb,var(--c-red) 76%,var(--text));background:color-mix(in srgb,var(--c-red) 8%,var(--surface));border-color:color-mix(in srgb,var(--c-red) 24%,var(--border))}
+  .sensor-alert .btn{margin-left:auto}
+  .sensor-sourcebar{display:flex;align-items:center;gap:7px;margin:-2px 0 13px;color:var(--text-faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.055em}
+  .sensor-sourcebar b{color:var(--text);font-weight:650;letter-spacing:0}.sensor-live-dot{width:8px;height:8px;border-radius:50%;background:#34a853;box-shadow:0 0 0 5px rgba(52,168,83,.12);animation:sensorLive 2s ease-in-out infinite}.sensor-live-dot.stale{background:#f9ab00;box-shadow:0 0 0 5px rgba(249,171,0,.12);animation:none}
+  .sensor-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:13px}
+  .sensor-stats>div{position:relative;overflow:hidden;min-height:105px;padding:16px 17px;border:1px solid var(--border);border-radius:19px;background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--accent-soft) 28%,var(--surface)));box-shadow:0 1px 2px rgba(60,64,67,.05)}
+  .sensor-stats>div::after{content:"";position:absolute;right:-18px;bottom:-30px;width:92px;height:92px;border-radius:50%;background:rgba(66,133,244,.08)}.sensor-stats>div.ok::after{background:rgba(52,168,83,.10)}.sensor-stats>div.warn::after{background:rgba(249,171,0,.12)}.sensor-stats>div.crit::after{background:rgba(234,67,53,.09)}
+  .sensor-stats span,.sensor-stats small,.sensor-stats b{position:relative;z-index:1;display:block}.sensor-stats span{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em}.sensor-stats b{margin:5px 0 1px;font-size:27px;letter-spacing:-.04em}.sensor-stats small{font-size:10.5px;color:var(--text-dim)}
+  .sensor-toolbar{display:grid;grid-template-columns:minmax(210px,1fr) auto minmax(190px,.72fr);align-items:end;gap:11px;margin-bottom:13px;padding:11px;border:1px solid var(--border);border-radius:19px;background:var(--surface)}
+  .sensor-search{height:43px;display:flex;align-items:center;gap:9px;padding:0 13px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2);transition:border-color .2s,box-shadow .2s}.sensor-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}.sensor-search svg{width:17px;height:17px;color:var(--text-faint);flex:none}.sensor-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
+  .sensor-filters{display:flex;align-items:center;gap:5px}.sensor-filter{height:43px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:1px solid var(--border);border-radius:13px;background:transparent;color:var(--text-dim);font:inherit;font-size:11px;cursor:pointer;transition:transform .18s,background .2s,border-color .2s}.sensor-filter:hover{transform:translateY(-1px);background:var(--surface-2)}.sensor-filter.on{border-color:rgba(66,133,244,.35);background:var(--accent-soft);color:var(--text)}.sensor-filter i{width:7px;height:7px;border-radius:50%;background:#7a7f87}.sensor-filter.water i{background:#4285f4}.sensor-filter.soil i{background:#34a853}.sensor-filter.air i{background:#a564c9}.sensor-filter span{padding:2px 5px;border-radius:999px;background:color-mix(in srgb,var(--text) 7%,transparent);font-size:9px}
+  .sensor-param{display:flex;flex-direction:column;gap:5px}.sensor-param>span{padding-left:4px;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}.sensor-param select{height:43px;width:100%;padding:0 36px 0 12px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);color:var(--text);font:inherit;font-size:11.5px;outline:0}.sensor-param select:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .sensor-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:13px;align-items:stretch}
+  .sensor-map-card,.sensor-detail,.sensor-list-section{border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:0 1px 3px rgba(60,64,67,.07)}
+  .sensor-map-card{min-width:0;overflow:hidden}.sensor-map-title{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 17px;border-bottom:1px solid var(--border)}.sensor-map-title b,.sensor-map-title span{display:block}.sensor-map-title b{font-size:13px}.sensor-map-title span{margin-top:2px;color:var(--text-faint);font-size:9.5px}.sensor-map-count{font-size:10.5px;color:var(--text-faint)}.sensor-map-count b{display:inline;color:var(--text)}
+  .sensor-map{position:relative;isolation:isolate;aspect-ratio:1.0046/1;min-height:440px;overflow:hidden;background:radial-gradient(circle at 18% 12%,rgba(66,133,244,.13),transparent 31%),linear-gradient(145deg,#edf7ff,#dfeffa)}.sensor-map::after{content:"";position:absolute;inset:0;z-index:1;background-image:linear-gradient(rgba(66,133,244,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(66,133,244,.055) 1px,transparent 1px);background-size:12.5% 12.5%;pointer-events:none}.sensor-brazil-shape{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:fill;opacity:.96}.sensor-coord{position:absolute;z-index:2;padding:4px 6px;border-radius:7px;background:color-mix(in srgb,var(--surface) 82%,transparent);color:var(--text-faint);font-size:8.5px;pointer-events:none}.sensor-coord.nw{top:9px;left:10px}.sensor-coord.se{right:10px;bottom:9px}.sensor-place{position:absolute;z-index:2;color:rgba(27,94,55,.48);font-size:9px;font-weight:650;letter-spacing:.13em;text-transform:uppercase;pointer-events:none;text-shadow:0 1px 2px rgba(255,255,255,.8)}.sensor-place.amazon{left:23%;top:28%}.sensor-place.brasilia{left:55%;top:51%;font-size:7.5px}.sensor-place.sao-paulo{left:58%;top:71%;font-size:7.5px}.sensor-place.atlantic{right:2.5%;top:53%;width:18%;color:rgba(45,103,158,.38);font-size:7.5px;line-height:1.5;text-align:center}.sensor-compass{position:absolute;right:14px;top:13px;z-index:2;width:25px;height:34px;color:#285f87;text-align:center;font-size:9px;pointer-events:none}.sensor-compass i{display:block;width:1px;height:17px;margin:2px auto 0;background:#285f87}.sensor-compass i::before{content:"";display:block;width:6px;height:6px;border-left:1px solid #285f87;border-top:1px solid #285f87;transform:translate(-2.5px,1px) rotate(45deg)}
+  :root[data-theme="dark"] .sensor-map{background:linear-gradient(145deg,#152536,#10202c)}:root[data-theme="dark"] .sensor-brazil-shape{filter:brightness(.48) saturate(.78);opacity:.88}:root[data-theme="dark"] .sensor-place{color:rgba(172,230,188,.45);text-shadow:0 1px 2px #10202c}:root[data-theme="dark"] .sensor-place.atlantic{color:rgba(138,190,232,.38)}
+  .sensor-marker{position:absolute;z-index:3;width:13px;height:13px;padding:0;border:0;border-radius:50%;transform:translate(-50%,-50%);background:transparent;cursor:pointer}.sensor-marker::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:color-mix(in srgb,var(--sensor-color) 16%,transparent);transition:transform .2s,background .2s}.sensor-marker i{position:absolute;inset:2px;border:1.5px solid color-mix(in srgb,#fff 72%,var(--sensor-color));border-radius:50%;background:var(--sensor-color);box-shadow:0 1px 5px rgba(0,0,0,.22);transition:transform .2s}.sensor-marker:hover{z-index:8}.sensor-marker:hover::before{transform:scale(1.65);background:color-mix(in srgb,var(--sensor-color) 28%,transparent)}.sensor-marker:hover i{transform:scale(1.28)}.sensor-marker.selected{z-index:9}.sensor-marker.selected::before{inset:-7px;border:2px solid var(--sensor-color);background:transparent;animation:sensorSelect 1.8s ease-out infinite}.sensor-marker.selected i{transform:scale(1.38);box-shadow:0 0 0 2px var(--surface),0 2px 10px var(--sensor-color)}
+  .sensor-map-legend{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:10px 16px;border-top:1px solid var(--border);font-size:9.5px;color:var(--text-faint)}.sensor-map-legend>span{display:flex;align-items:center;gap:5px}.sensor-map-legend i{width:8px;height:8px;border-radius:50%}.sensor-map-legend i.water{background:#4285f4}.sensor-map-legend i.soil{background:#34a853}.sensor-map-legend i.air{background:#a564c9}.sensor-map-credit{padding-left:10px;border-left:1px solid var(--border)}.sensor-map-legend .metric{margin-left:auto}.sensor-map-legend .metric b{color:var(--text)}
+  .sensor-detail{min-width:0;overflow:hidden;display:flex;flex-direction:column}.sensor-detail-head{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:center;padding:15px 15px 13px;background:linear-gradient(145deg,rgba(66,133,244,.10),transparent)}.sensor-detail-head.soil{background:linear-gradient(145deg,rgba(52,168,83,.11),transparent)}.sensor-detail-head.air{background:linear-gradient(145deg,rgba(165,100,201,.12),transparent)}.sensor-detail-icon{grid-row:1/3;width:42px;height:42px;display:grid;place-items:center;border-radius:14px;color:#fff;background:var(--gemini);box-shadow:0 7px 16px rgba(66,133,244,.20)}.sensor-detail-icon svg{width:21px;height:21px}.sensor-detail-head h3{font-size:18px;letter-spacing:-.02em}.sensor-detail-head p{margin:2px 0 0;font-size:10px;color:var(--text-faint)}.sensor-fresh{grid-column:2;justify-self:start;display:inline-flex;align-items:center;gap:5px;color:var(--text-faint);font-size:9.5px}.sensor-fresh::before{content:"";width:6px;height:6px;border-radius:50%;background:#9aa0a6}.sensor-fresh.on{color:#188038}.sensor-fresh.on::before{background:#34a853;box-shadow:0 0 0 4px rgba(52,168,83,.10)}
+  .sensor-description{padding:12px 15px;border-top:1px solid var(--border);background:linear-gradient(145deg,color-mix(in srgb,var(--accent-soft) 45%,var(--surface)),var(--surface))}.sensor-description>span{display:block;margin-bottom:5px;color:var(--accent);font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.sensor-description p{margin:0;color:var(--text-dim);font-size:10px;line-height:1.55}
+  .sensor-detail-meta{display:grid;gap:8px;padding:12px 15px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.sensor-detail-meta>div{display:flex;justify-content:space-between;gap:8px}.sensor-detail-meta span{font-size:9.5px;color:var(--text-faint)}.sensor-detail-meta b{font-size:9.5px;font-weight:600;text-align:right}
+  .sensor-health{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:12px 15px}.sensor-health>div{min-height:66px;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}.sensor-health b,.sensor-health span,.sensor-health small{display:block}.sensor-health span{font-size:9px;color:var(--text-faint)}.sensor-health small{margin-top:3px;font-size:9px;color:var(--text-faint)}.sensor-health b{margin-top:4px}.sensor-battery{position:relative;overflow:hidden}.sensor-battery::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:calc(var(--battery) * 1%);border-radius:0 3px 3px 0;background:linear-gradient(90deg,#ea4335,#f9ab00 46%,#34a853)}.quality-ok,.q-ok{color:#188038}.quality-warn,.q-warn{color:#b06000}.quality-fail,.q-fail{color:#c5221f}.q-missing{color:var(--text-faint)}
+  .sensor-readings-head{display:flex;justify-content:space-between;gap:8px;padding:2px 15px 9px}.sensor-readings-head b{font-size:11.5px}.sensor-readings-head span{font-size:9px;color:var(--text-faint)}.sensor-readings{flex:1;min-height:150px;max-height:287px;overflow-y:auto;padding:0 9px 11px}.sensor-reading{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:7px;padding:9px 6px;border-top:1px solid var(--border)}.sensor-reading span b,.sensor-reading span small{display:block}.sensor-reading span b{font-size:10.5px}.sensor-reading span small{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-faint);font-size:7.8px}.sensor-reading strong{font-size:11.5px;white-space:nowrap}.sensor-reading strong i{font-style:normal;font-size:8px;color:var(--text-faint)}.sensor-reading em,.sensor-list-card em{min-width:34px;padding:3px 4px;border-radius:6px;background:var(--surface-2);font-style:normal;font-size:7.5px;font-weight:700;text-align:center}
+  .sensor-list-section{margin-top:13px;padding:15px}.sensor-list-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:11px}.sensor-list-head b,.sensor-list-head span{display:block}.sensor-list-head b{font-size:13px}.sensor-list-head span,.sensor-list-head small{margin-top:2px;font-size:9.5px;color:var(--text-faint)}.sensor-list-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.sensor-list-card{display:grid;grid-template-columns:9px minmax(0,1fr) auto auto;align-items:center;gap:8px;min-width:0;padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2);color:var(--text);text-align:left;cursor:pointer;transition:transform .18s,border-color .2s,box-shadow .2s}.sensor-list-card:hover{transform:translateY(-2px);border-color:var(--border-strong);box-shadow:0 5px 14px rgba(60,64,67,.08)}.sensor-list-card.on{border-color:rgba(66,133,244,.38);box-shadow:inset 0 0 0 1px rgba(66,133,244,.10)}.sensor-list-dot{width:8px;height:8px;border-radius:50%;background:#7a7f87}.sensor-list-card.water .sensor-list-dot{background:#4285f4}.sensor-list-card.soil .sensor-list-dot{background:#34a853}.sensor-list-card.air .sensor-list-dot{background:#a564c9}.sensor-list-card>span:nth-child(2){min-width:0}.sensor-list-card>span b,.sensor-list-card>span small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sensor-list-card>span b{font-size:11px}.sensor-list-card>span small{margin-top:2px;font-size:8.5px;color:var(--text-faint)}.sensor-list-card strong{font-size:10.5px;white-space:nowrap}.sensor-list-card strong i{font-style:normal;font-size:8px;color:var(--text-faint)}
+  .sensor-loading{min-height:440px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px solid var(--border);border-radius:24px;background:radial-gradient(circle at center,rgba(66,133,244,.10),transparent 30%),var(--surface);text-align:center}.sensor-loading b{font-size:14px}.sensor-loading span{max-width:42ch;color:var(--text-faint);font-size:11px;line-height:1.5}.sensor-orbit{width:64px;height:64px;display:grid;place-items:center;border:1px solid rgba(66,133,244,.22);border-radius:50%;color:#4285f4;animation:sensorOrbit 2.5s ease-in-out infinite}.sensor-orbit svg{width:27px;height:27px}
+  @keyframes sensorLive{50%{box-shadow:0 0 0 9px rgba(52,168,83,0)}}
+  @keyframes sensorSelect{0%{transform:scale(.6);opacity:1}70%,100%{transform:scale(1.55);opacity:0}}
+  @keyframes sensorOrbit{50%{transform:rotate(180deg) scale(1.08);border-color:rgba(165,100,201,.42);color:#a564c9}100%{transform:rotate(360deg)}}
+
+  @media(max-width:1120px){.sensor-map-layout{grid-template-columns:minmax(0,1fr) 300px}.sensor-toolbar{grid-template-columns:1fr 1fr}.sensor-filters{grid-column:1/-1;grid-row:2}.sensor-list-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:900px){.sensor-map-layout{grid-template-columns:1fr}.sensor-detail{max-height:none}.sensor-readings{max-height:360px}.sensor-stats{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.sensor-view-head{display:block}.sensor-head-actions{justify-content:flex-start;margin-top:12px}.sensor-head-actions .btn{flex:1;justify-content:center}.sensor-sourcebar{flex-wrap:wrap}.sensor-toolbar{grid-template-columns:1fr}.sensor-filters{grid-column:auto;grid-row:auto;overflow-x:auto;padding-bottom:2px}.sensor-param{grid-column:auto}.sensor-map{min-height:0}.sensor-list-grid{grid-template-columns:1fr}.sensor-list-head{display:block}.sensor-list-head>small{display:block;margin-top:4px}.sensor-map-credit{width:100%;padding-left:0;border-left:0}.sensor-map-legend .metric{margin-left:0;width:100%}.sensor-reading{grid-template-columns:minmax(0,1fr) auto auto}}
+  @media(max-width:430px){.sensor-stats{gap:7px}.sensor-stats>div{min-height:96px;padding:13px}.sensor-stats b{font-size:23px}.sensor-detail-meta>div{display:block}.sensor-detail-meta b{text-align:left;margin-top:2px}.sensor-filter{padding:0 9px}.sensor-place{font-size:7px}.sensor-place.brasilia,.sensor-place.sao-paulo,.sensor-place.atlantic{font-size:6px}}
+
+  @keyframes messageIn{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes gentleRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  #main.view-in{animation:gentleRise .42s cubic-bezier(.2,.8,.2,1)}
+  .feed>.msg,.kb-grid>.kb-card,.news-grid>.news-card,.group-card{animation:gentleRise .36s cubic-bezier(.2,.8,.2,1) both}
+  .feed>*:nth-child(2),.kb-grid>*:nth-child(2),.news-grid>*:nth-child(2),.groups-list>*:nth-child(2){animation-delay:.035s}
+  .feed>*:nth-child(3),.kb-grid>*:nth-child(3),.news-grid>*:nth-child(3),.groups-list>*:nth-child(3){animation-delay:.07s}
+  .feed>*:nth-child(n+4),.kb-grid>*:nth-child(n+4),.news-grid>*:nth-child(n+4),.groups-list>*:nth-child(n+4){animation-delay:.1s}
+  @media(max-width:820px){
+    .groups-wrap{grid-template-columns:1fr;min-height:0}.groups-list{border-right:none;border-bottom:1px solid var(--border);display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,72vw);overflow-x:auto}.group-feed{max-height:48vh}.group-picker{grid-template-columns:1fr}.group-message{max-width:88%}
+  }
+  @media(max-width:720px){
+    .rail{scrollbar-width:none;-ms-overflow-style:none}.rail::-webkit-scrollbar{display:none}
+    .incident .code{display:none}.incident .name{max-width:112px}.top{gap:8px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    #main.view-in,.login-card,.modal,.modal-bg,.nav-b.on svg,.feed>.msg,.kb-grid>.kb-card,.news-grid>.news-card,.group-card,.group-message,.sensor-live-dot,.sensor-marker.selected::before,.sensor-orbit{animation:none}
+    .msg:hover,.kb-card:hover,.news-card:hover{transform:none; box-shadow:none}
+    .btn:active,.btn:hover,.chip:active,.tp:active,.icon-btn:active,.icon-btn:hover,.role-opt:active,.nav-b:hover,.group-card:hover,.group-person:hover,.sensor-filter:hover,.sensor-list-card:hover{transform:none}
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="modal-root"></div>
+  <div class="toast-wrap" id="toast-root"></div>
+
+<script>
+(function(){
+  "use strict";
+  const el = (id)=> document.getElementById(id);
+  const UI_KEY = "greennet_ui_v1";
+
+  const I = {
+    leaf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>',
+    feed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8M8 13h5"/><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>',
+    tasks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+    kb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+    map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>',
+    log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>',
+    admin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-1.5-1.5"/></svg>',
+    depts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h6"/></svg>',
+    crown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5L3 8Z"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>',
+    sensors:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7"/></svg>',
+    coin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a3 3 0 0 0-2.5-1.2c-1.5 0-2.5.8-2.5 2s1 1.6 2.5 2 2.5.8 2.5 2-1 2-2.5 2a3 3 0 0 1-2.5-1.2M12 6.5v11"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+    theme:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>',
+    arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+    news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a4 4 0 0 1 0 7"/></svg>',
+    sched:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M12 13v3l2 1"/></svg>',
+  };
+  const MSG_COLOR = {focus:"--c-green", urgent:"--c-red", help:"--c-amber", research:"--c-blue", request:"--c-purple"};
+  const NEWS_COLOR = {info:"--c-blue", warning:"--c-amber", critical:"--c-red"};
+  const DEPTS = ["Департамент управления","Департамент общественных связей","Инженерный департамент","Департамент Икс","Научный департамент","Департамент IT","Департамент дизайна","Проект 11"];  // для формы регистрации (до входа)
+
+  /* ---------------- Client-side UI state ---------------- */
+  function loadUI(){ try{ return Object.assign({view:"feed",filter:"all",theme:"auto",composerType:"focus",deptSel:null}, JSON.parse(localStorage.getItem(UI_KEY)||"{}")); }catch(e){ return {view:"feed",filter:"all",theme:"auto",composerType:"focus",deptSel:null}; } }
+  function saveUI(){ try{ localStorage.setItem(UI_KEY, JSON.stringify(U)); }catch(e){} }
+  const U = loadUI();
+  let S = null;          // server state
+  let ME = null, CAPS = null;
+  let pollTimer = null, clockTimer = null;
+  let serverOffset = 0;
+  let DEMO_ON = false;   // показывать демо-доступы на входе (сервер в режиме GREENNET_DEMO)
+  let REG_ON = false;    // разрешена самостоятельная регистрация
+  let PORTAL_ON = false; // доступен вход через портал «Летово Игра»
+  let authTab = "login"; // 'login' | 'register'
+  let timeSyncTimer=null;
+  const SENSOR_UI={data:null,loading:false,error:null,loadedAt:0};
+  async function syncTime(){ try{ const r=await api("/api/time"); const t=Date.parse(r.server_time); if(!isNaN(t)) serverOffset = t - Date.now(); }catch(e){} }
+  function startTimeSync(){ if(timeSyncTimer) return; syncTime(); timeSyncTimer=setInterval(syncTime, 60000); }
+  function stopTimeSync(){ if(timeSyncTimer){ clearInterval(timeSyncTimer); timeSyncTimer=null; } }
+  function serverNow(){ return new Date(Date.now()+serverOffset); }
+  function minsNow(){ const d=serverNow(); return d.getHours()*60+d.getMinutes(); }
+  function toMins(at){ const p=String(at||"").split(":"); return (+p[0])*60+(+p[1]); }
+
+  /* ---------------- Helpers ---------------- */
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function hm(iso){ if(!iso) return "--:--"; const d=new Date(iso); if(isNaN(d)) return "--:--"; return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  function cvar(v){ return `--mc:var(${v});--mc-soft:var(${v}-soft)`; }
+  function toast(msg, err){ const w=el("toast-root"); const t=document.createElement("div"); t.className="toast"+(err?" err":""); t.innerHTML='<span class="d"></span>'+esc(msg); w.appendChild(t); setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .3s"; setTimeout(()=>t.remove(),300); }, 2800); }
+
+  let apiBusy = false;   // защита от двойной отправки (быстрый двойной клик)
+  async function api(path, method, body){
+    const mutating = !!method && method!=="GET";
+    if(mutating){ if(apiBusy) throw {status:0, error:"Подождите, операция выполняется…"}; apiBusy=true; }
+    try{
+      const opt = {method:method||"GET", headers:{}, credentials:"same-origin"};
+      if(body!==undefined){ opt.headers["Content-Type"]="application/json"; opt.body=JSON.stringify(body); }
+      let res;
+      try{ res = await fetch(path, opt); }
+      catch(e){ throw {status:0, error:"Нет связи с сервером"}; }
+      let data=null; try{ data = await res.json(); }catch(e){}
+      if(!res.ok){ throw {status:res.status, error:(data&&data.error)||("Ошибка "+res.status)}; }
+      return data;
+    } finally { if(mutating) apiBusy=false; }
+  }
+
+  /* ---------------- Theme ---------------- */
+  function applyTheme(){ const r=document.documentElement; if(U.theme==="auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme",U.theme); }
+  function cycleTheme(){ U.theme = U.theme==="auto"?"light":U.theme==="light"?"dark":"auto"; applyTheme(); saveUI(); toast("Тема: "+({auto:"как в системе",light:"светлая",dark:"тёмная"}[U.theme])); }
+
+  /* ---------------- Boot ---------------- */
+  async function boot(){
+    applyTheme();
+    try{
+      const r = await api("/api/me");
+      DEMO_ON = !!(r && r.demo);
+      REG_ON = !!(r && r.registration);
+      PORTAL_ON = !!(r && r.portal);
+      if(r.user){ ME=r.user; CAPS=r.caps; await enterApp(); return; }
+      // авто-вход через портал: ?portal_token=... (когда встроены/пришли по редиректу)
+      const pt = new URLSearchParams(location.search).get("portal_token");
+      if(PORTAL_ON && pt){ if(await portalLogin(pt)) return; }
+    }catch(e){}
+    renderLogin();
+  }
+
+  async function enterApp(){
+    stopPoll();
+    await loadState();
+    renderShell();
+    renderAll();
+    startClock();
+    startPoll();
+  }
+
+  async function loadState(){ S = await api("/api/state"); ME=S.me; CAPS=S.caps; startTimeSync(); }
+
+  /* ---------------- Login ---------------- */
+  const DEMO = [
+    ["kovalev","Руководитель штаба"],
+    ["sokolova","Рук. департамента"],
+    ["petrov","Старший специалист"],
+    ["volkov","Специалист"],
+    ["volonter","Волонтёр"],
+  ];
+  function renderLogin(){
+    stopPoll(); stopClock(); stopTimeSync();
+    const isReg = REG_ON && authTab === "register";
+    const tabs = REG_ON ? `<div class="auth-tabs">
+              <button class="auth-tab ${!isReg?"on":""}" data-auth-tab="login">Вход</button>
+              <button class="auth-tab ${isReg?"on":""}" data-auth-tab="register">Регистрация</button>
+            </div>` : "";
+    const loginForm = `<form id="loginForm" autocomplete="on">
+              <div class="field"><label>Логин</label><input id="lg-user" name="username" autocomplete="username" placeholder="например, admin" autofocus></div>
+              <div class="field"><label>Пароль</label><input id="lg-pass" name="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+              <div class="form-err" id="lg-err"></div>
+              <button class="btn primary" type="submit" style="width:100%; justify-content:center" id="lg-go">${I.arrow} Войти в штаб</button>
+            </form>
+            ${DEMO_ON ? `<details class="login-demo">
+              <summary>Демонстрационные профили</summary>
+              <table>${DEMO.map(d=>`<tr><td>${d[0]}</td><td>${d[1]}</td></tr>`).join("")}</table>
+              <div class="reg-note">Пароль задаётся через GREENNET_DEMO_PASSWORD или создаётся локально в demo_password.txt.</div>
+            </details>` : ""}`;
+    const registerForm = `<form id="regForm" autocomplete="on">
+              <div class="field"><label>Логин</label><input id="rg-user" autocomplete="username" placeholder="ivanov" autofocus></div>
+              <div class="two-col">
+                <div class="field"><label>Имя</label><input id="rg-first" autocomplete="given-name" placeholder="Иван"></div>
+                <div class="field"><label>Фамилия</label><input id="rg-last" autocomplete="family-name" placeholder="Иванов"></div>
+              </div>
+              <div class="field"><label>Департамент</label><select id="rg-dept">${DEPTS.map(d=>`<option ${d==="Проект 11"?"selected":""}>${esc(d)}</option>`).join("")}</select></div>
+              <div class="two-col">
+                <div class="field"><label>Пароль</label><input id="rg-pass" type="password" autocomplete="new-password" placeholder="мин. 6 символов"></div>
+                <div class="field"><label>Повтор пароля</label><input id="rg-pass2" type="password" autocomplete="new-password" placeholder="ещё раз"></div>
+              </div>
+              <label class="terms-check"><input type="checkbox" id="rg-terms"><span>Я принимаю <span class="lnk" data-show-terms>пользовательское соглашение</span> и согласен(на), что переписка в системе видна штабу.</span></label>
+              <div class="reg-note">Новым участникам присваивается роль «наблюдатель». Роль назначает администратор.</div>
+              <div class="form-err" id="rg-err"></div>
+              <button class="btn primary" type="submit" style="width:100%; justify-content:center" id="rg-go">${I.check} Зарегистрироваться</button>
+            </form>`;
+    el("root").innerHTML = `
+      <div class="login-wrap">
+        <div class="login-card">
+          <div class="login-hero">
+            <div class="row">
+              <div class="logo">${I.leaf}</div>
+              <div><h1>GreenNet <span class="mono">Crisis</span></h1></div>
+            </div>
+            <p>${isReg ? "Создайте учётную запись участника штаба. Профиль попадёт в SQLite и CSV, а пароль сохранится только как защищённый хэш." : "Платформа управления ликвидацией экологической катастрофы. Войдите под своей учётной записью в штабе."}</p>
+          </div>
+          <div class="login-body">
+            ${tabs}
+            ${isReg ? registerForm : loginForm}
+            ${(PORTAL_ON && !isReg) ? `<div class="portal-login">
+              <div class="pl-or"><span>или</span></div>
+              <button class="btn portal-btn" data-portal-open>${I.leaf} Войти через портал «Летово Игра»</button>
+              <div id="portal-box" style="display:none">
+                <textarea id="pt-token" rows="2" placeholder="Вставьте токен портала (Bearer)…"></textarea>
+                <div class="form-err" id="pt-err"></div>
+                <button class="btn primary" data-portal-go style="width:100%;justify-content:center">${I.arrow} Войти по токену</button>
+              </div>
+            </div>` : ""}
+            <div class="login-copy">© 2026 TokKraftcorp · GreenNet Crisis · <span class="lic-link" data-show-license>Лицензия</span> · <span class="lic-link" data-show-terms>Соглашение</span></div>
+          </div>
+        </div>
+      </div>`;
+    const lf = el("loginForm"); if(lf) lf.addEventListener("submit", doLogin);
+    const rf = el("regForm"); if(rf) rf.addEventListener("submit", doRegister);
+  }
+  async function portalLogin(token){
+    const err=el("pt-err"); if(err) err.textContent="";
+    token=(token||"").trim(); if(!token){ if(err) err.textContent="Вставьте токен портала"; return false; }
+    try{
+      const r=await api("/api/auth/portal","POST",{token});
+      ME=r.user; CAPS=r.caps; await enterApp(); toast("Вход через портал: "+ME.name); return true;
+    }catch(ex){ const m=ex.error||"Ошибка входа через портал"; if(err) err.textContent=m; else toast(m,true); return false; }
+  }
+  async function doLogin(e){
+    if(e) e.preventDefault();
+    const u=el("lg-user").value.trim(), p=el("lg-pass").value;
+    const err=el("lg-err"); err.textContent="";
+    if(!u||!p){ err.textContent="Введите логин и пароль"; return; }
+    const btn=el("lg-go"); btn.disabled=true;
+    try{
+      const r = await api("/api/login","POST",{username:u, password:p});
+      ME=r.user; CAPS=r.caps; await enterApp(); toast("Добро пожаловать, "+ME.name);
+    }catch(ex){ err.textContent = ex.error||"Ошибка входа"; btn.disabled=false; }
+  }
+  async function doRegister(e){
+    if(e) e.preventDefault();
+    const err=el("rg-err"); err.textContent="";
+    const username=el("rg-user").value.trim();
+    const first_name=el("rg-first").value.trim();
+    const last_name=el("rg-last").value.trim();
+    const dept=el("rg-dept").value;
+    const pass=el("rg-pass").value, pass2=el("rg-pass2").value;
+    if(!username||!first_name||!last_name){ err.textContent="Заполните логин, имя и фамилию"; return; }
+    if(pass.length<6){ err.textContent="Пароль минимум 6 символов"; return; }
+    if(pass!==pass2){ err.textContent="Пароли не совпадают"; return; }
+    if(!el("rg-terms").checked){ err.textContent="Нужно принять пользовательское соглашение"; return; }
+    const btn=el("rg-go"); btn.disabled=true;
+    try{
+      const r=await api("/api/register","POST",{username, first_name, last_name, dept, password:pass, accept_terms:true});
+      ME=r.user; CAPS=r.caps; await enterApp(); toast("Регистрация успешна. Добро пожаловать, "+ME.name);
+    }catch(ex){ err.textContent=ex.error||"Ошибка регистрации"; btn.disabled=false; }
+  }
+
+  /* ---------------- Shell ---------------- */
+  function renderShell(){
+    el("root").innerHTML = `
+      <div class="shell">
+        <nav class="rail" id="rail"></nav>
+        <header class="top" id="top"></header>
+        <main class="main" id="main"></main>
+        <aside class="side" id="side"></aside>
+      </div>`;
+  }
+
+  const NAV = [
+    {v:"feed", ic:"feed", t:"Лента"},
+    {v:"groups", ic:"chat", t:"Чаты"},
+    {v:"sensors", ic:"sensors", t:"Зонды"},
+    {v:"depts", ic:"depts", t:"Отделы"},
+    {v:"finance", ic:"coin", t:"Финансы"},
+    {v:"tasks", ic:"tasks", t:"Задачи"},
+    {v:"schedule", ic:"sched", t:"График"},
+    {v:"news", ic:"news", t:"Новости"},
+    {v:"kb", ic:"kb", t:"База"},
+    {v:"map", ic:"map", t:"Карта"},
+    {v:"log", ic:"log", t:"Журнал"},
+  ];
+  function renderRail(){
+    const unver = S.messages.filter(m=>m.verify==="unverified").length;
+    const openT = S.tasks.filter(t=>t.status!=="done").length;
+    const critN = (S.news||[]).filter(n=>n.level==="critical").length;
+    let items = NAV.slice();
+    if(CAPS.manage) items.push({v:"admin", ic:"admin", t:"Админ"});
+    el("rail").innerHTML =
+      `<div class="brand" title="GreenNet Crisis">${I.leaf}</div>` +
+      items.map(n=>{
+        let badge="";
+        if(n.v==="feed" && unver) badge=`<span class="badge">${unver}</span>`;
+        if(n.v==="tasks" && openT) badge=`<span class="badge" style="background:var(--c-blue);border-color:var(--surface)">${openT}</span>`;
+        if(n.v==="news" && critN) badge=`<span class="badge">${critN}</span>`;
+        return `<button class="nav-b ${U.view===n.v?"on":""}" data-view="${n.v}">${badge}${I[n.ic]}<span>${n.t}</span></button>`;
+      }).join("") + `<div class="rail-sp"></div>`;
+  }
+
+  function renderTop(){
+    const st = S.settings||{};
+    el("top").innerHTML = `
+      <div class="incident">
+        <span class="pulse-dot" title="Активный инцидент"></span>
+        <span class="name">${esc(st.incident_name||"Инцидент")}</span>
+        <span class="code lbl" style="margin:0">· ${esc(st.incident_place||"")}</span>
+      </div>
+      <div class="top-spacer"></div>
+      <span class="live"><span class="live-dot"></span><span>онлайн</span></span>
+      <div class="clock tnum js-clock" id="clock" data-zone="МСК">--:--:--</div>
+      <button class="icon-btn" data-toggle-theme title="Сменить тему">${I.theme}</button>
+      <div class="who-box">
+        <span class="who"><b>${esc(ME.name)}</b><span class="lbl" style="margin:0">${esc(ME.role_label)}</span></span>
+        <span class="avatar" title="${esc(ME.dept)}">${esc(ME.short)}</span>
+      </div>
+      <button class="icon-btn" data-logout title="Выйти">${I.logout}</button>`;
+  }
+
+  /* ---------------- Side ---------------- */
+  function renderSide(){
+    const active = S.map_objects.filter(o=>o.kind==="focus");
+    const unver = S.messages.filter(m=>m.verify==="unverified").length;
+    const openT = S.tasks.filter(t=>t.status!=="done").length;
+    const overdue = S.tasks.filter(t=>t.status!=="done" && t.due && new Date(t.due)<serverNow()).length;
+    el("side").innerHTML = `
+      <div class="panel">
+        <div class="lbl">Обстановка</div>
+        <div class="stat-grid">
+          <div class="stat crit"><div class="n tnum">${active.length}</div><div class="k">Очаги</div></div>
+          <div class="stat warn"><div class="n tnum">${unver}</div><div class="k">Не подтв.</div></div>
+          <div class="stat blue"><div class="n tnum">${openT}</div><div class="k">Задачи</div></div>
+          <div class="stat acc"><div class="n tnum">${S.knowledge.length}</div><div class="k">В базе</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="lbl"><span>Эфир</span><span class="mono" style="color:var(--text-faint)">${hm(serverNow().toISOString())}</span></div>
+        ${sideAir()}
+      </div>
+      <div class="panel ai">
+        <div class="lbl"><span>Авто-аналитика</span><span style="color:var(--accent-strong)">GreenNet</span></div>
+        <div class="ai-note">Эвристический разбор ленты. Не заменяет решение штаба — только подсказывает.</div>
+        ${aiInsights(active, unver, overdue)}
+      </div>
+      <div class="side-copy" title="Открыть лицензию" data-show-license style="cursor:pointer">© 2026 TokKraftcorp · GreenNet Crisis</div>`;
+  }
+  function insight(cv, sym, html){ return `<div class="insight"><span class="ic" style="background:var(${cv}-soft);color:var(${cv})">${sym}</span><span class="tx">${html}</span></div>`; }
+  function aiInsights(active, unver, overdue){
+    const out=[];
+    if(active.length>=2) out.push(insight("--c-red","➤",`Обнаружено <b>${active.length}</b> очага вдоль течения реки. Высокий риск <b>коридора распространения</b> к водозабору — приоритет на изоляцию русла.`));
+    const dup = clusterMessages(); if(dup) out.push(insight("--c-purple","⿻",dup));
+    if(unver>0) out.push(insight("--c-amber","!",`<b>${unver}</b> сообщени${plural(unver,"е","я","й")} ждут проверки. Старшим специалистам стоит подтвердить их до принятия решений.`));
+    if(overdue>0) out.push(insight("--c-red","⏱",`<b>${overdue}</b> задач${plural(overdue,"а","и","")} просрочен${overdue===1?"а":"о"}. Рекомендуется перераспределить силы.`));
+    else { const l=deptLoad(); if(l) out.push(insight("--c-blue","≋",l)); }
+    if(!out.length) out.push(insight("--c-green","✓","Обстановка стабильна: новых очагов и просрочек нет."));
+    return out.join("");
+  }
+  function plural(n,a,b,c){ n=Math.abs(n)%100; const n1=n%10; if(n>10&&n<20)return c; if(n1>1&&n1<5)return b; if(n1===1)return a; return c; }
+  function clusterMessages(){
+    const stop=new Set(["очаг","участок","река","летовки","воды","вода","нужны","нужно","сектор","после","через","около","примерно"]);
+    const map={};
+    S.messages.forEach(m=>{ const w=(m.text.toLowerCase().match(/[а-яё0-9№]{4,}/g)||[]); new Set(w).forEach(x=>{ if(!stop.has(x)){ (map[x]=map[x]||0); map[x]++; } }); });
+    let best=null; Object.keys(map).forEach(w=>{ if(map[w]>=2&&(!best||map[w]>best.n)) best={w,n:map[w]}; });
+    if(best) return `Слово «<b>${esc(best.w)}</b>» встречается в ${best.n} сообщениях — возможно, один инцидент. Стоит объединить карточки.`;
+    return null;
+  }
+  function deptLoad(){ const c={}; S.tasks.filter(t=>t.status!=="done").forEach(t=>c[t.dept]=(c[t.dept]||0)+1); const a=Object.entries(c).sort((x,y)=>y[1]-x[1]); if(a.length&&a[0][1]>=2) return `Наибольшая нагрузка — <b>${esc(a[0][0])}</b> (${a[0][1]} задач). При необходимости привлеките волонтёров.`; return null; }
+
+  /* ---------------- Main router ---------------- */
+  function renderMain(){
+    if(U.view==="feed") return renderFeed();
+    if(U.view==="groups") return renderGroups();
+    if(U.view==="sensors") return renderSensors();
+    if(U.view==="depts") return renderDepartments();
+    if(U.view==="finance") return renderFinance();
+    if(U.view==="tasks") return renderTasks();
+    if(U.view==="schedule") return renderSchedule();
+    if(U.view==="news") return renderNews();
+    if(U.view==="kb") return renderKB();
+    if(U.view==="map") return renderMap();
+    if(U.view==="log") return renderLog();
+    if(U.view==="admin") return CAPS.manage ? renderAdmin() : (U.view="feed", renderFeed());
+  }
+
+  /* ---- Feed ---- */
+  function renderFeed(){
+    const list = S.messages.filter(m=> U.filter==="all" || m.type===U.filter).slice().reverse();
+    const feed = list.length ? list.map(msgCard).join("") : `<div class="empty">${I.feed}<div>Нет сообщений этого типа.</div></div>`;
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Оперативная лента</h2>
+        <p>Каждое сообщение имеет тип и статус достоверности. Данные проходят проверку, прежде чем стать основой для решений.</p></div></div>
+      ${composerHTML()}${filterBar()}<div class="feed">${feed}</div>`;
+    const ta = el("msgText");
+    if(ta){ ta.value = U.draft||""; ta.addEventListener("input", ()=>{ U.draft=ta.value; }); }
+  }
+  function filterBar(){
+    const counts={all:S.messages.length}; Object.keys(S.msg_types).forEach(k=>counts[k]=S.messages.filter(m=>m.type===k).length);
+    const chips=[`<button class="chip ${U.filter==="all"?"on":""}" data-filter="all">Все <span class="tnum" style="color:var(--text-faint)">${counts.all}</span></button>`]
+      .concat(Object.keys(S.msg_types).map(k=>{ const on=U.filter===k; const cv=MSG_COLOR[k];
+        return `<button class="chip ${on?"on":""}" data-filter="${k}" ${on?`data-on-color style="color:var(${cv})"`:""}><span class="d" style="background:var(${cv})"></span>${esc(S.msg_types[k].label)} <span class="tnum" style="color:var(--text-faint)">${counts[k]}</span></button>`; }));
+    return `<div class="filters">${chips.join("")}</div>`;
+  }
+  function composerHTML(){
+    if(CAPS.post==="none") return "";
+    if(!S.msg_types[U.composerType]) U.composerType="focus";   // тип из localStorage мог устареть
+    const basicOnly = CAPS.post==="basic";
+    if(basicOnly && !S.msg_types[U.composerType].basic) U.composerType="focus";
+    const types = Object.keys(S.msg_types).map(k=>{ const dis=basicOnly&&!S.msg_types[k].basic; const on=k===U.composerType&&!dis; const cv=MSG_COLOR[k];
+      return `<button class="tp ${on?"on":""}" data-ctype="${k}" ${dis?"disabled":""} style="${on?`color:var(${cv})`:""}"><span class="d" style="background:var(${cv})"></span>${esc(S.msg_types[k].label)}</button>`; }).join("");
+    const hint = basicOnly ? `<div class="cap-hint">${I.lock}Ваша роль отправляет только «Новый очаг» и «Требуется помощь».</div>` : "<span></span>";
+    return `<div class="composer">
+        <div class="lbl" style="margin-bottom:9px">Новое сообщение · ${esc(ME.dept)}</div>
+        <div class="type-pick">${types}</div>
+        <textarea id="msgText" maxlength="1000" placeholder="Что произошло? Укажите участок, факты, что требуется…"></textarea>
+        <div class="row2">${hint}<button class="btn primary" data-send-msg>${I.send} Отправить</button></div></div>`;
+  }
+  function msgCard(m){
+    const cv = MSG_COLOR[m.type]||"--border"; const label=(S.msg_types[m.type]||{}).label||m.type;
+    const canVerify = CAPS.verify && m.verify==="unverified";
+    const vlabel = m.verify==="verified"?"Подтверждено":m.verify==="rejected"?"Отклонено":"Не подтверждено";
+    const vicon = m.verify==="verified"?I.check:m.verify==="rejected"?I.x:"";
+    const by = m.verified_by ? `<span class="by">${m.verify==="verified"?"проверил":"отклонил"}: ${esc(m.verified_by)}</span>` : "";
+    const canTask = CAPS.task_create!=="none";
+    let acts="";
+    if(canTask) acts += `<button class="btn sm ghost" data-msg-task="${m.id}" title="Создать задачу">${I.plus} В задачу</button>`;
+    if(canVerify) acts += `<button class="btn sm ghost" data-reject="${m.id}">${I.x} Отклонить</button><button class="btn sm primary" data-verify="${m.id}">${I.check} Подтвердить</button>`;
+    if(CAPS.decide) acts += `<button class="btn sm danger" data-del-msg="${m.id}" title="Удалить (модерация)">${I.trash}</button>`;
+    return `<article class="msg" style="${cvar(cv)}">
+        <div class="msg-top">
+          <span class="type-tag"><span class="d"></span>${esc(label)}</span>
+          <span class="author">${esc(m.author_name)}</span><span class="dept">· ${esc(m.dept)}</span>
+          <span class="time tnum">${hm(m.ts)}</span>
+        </div>
+        <div class="msg-body">${esc(m.text)}</div>
+        <div class="msg-foot"><span class="vstate ${m.verify}">${vicon}${vlabel}</span>${by}<div class="acts">${acts}</div></div>
+      </article>`;
+  }
+
+  /* ---- Departments + department chats ---- */
+  function renderDepartments(){
+    const depts = S.depts || [];
+    const sel = (U.deptSel && depts.includes(U.deptSel)) ? U.deptSel : depts[0];
+    // запоминаем позицию прокрутки чата ДО пересборки, чтобы поллинг не сбрасывал
+    // прокрутку игроку, читающему историю (скроллим в низ только если он уже внизу,
+    // сменил департамент, или только что отправил сообщение)
+    const prevFeed = document.querySelector(".chan-feed");
+    const wasBottom = prevFeed ? (prevFeed.scrollHeight - prevFeed.scrollTop - prevFeed.clientHeight < 48) : true;
+    const prevTop = prevFeed ? prevFeed.scrollTop : 0;
+    const deptChanged = renderDepartments._dept !== sel;
+    renderDepartments._dept = sel;
+    const roster = S.roster || [];
+    const headOf = d => roster.find(u=>u.dept===d && u.role==="dept_head")
+                     || roster.find(u=>u.dept===d && (u.role==="hq_head" || u.role==="admin"));
+    const membersOf = d => roster.filter(u=>u.dept===d);
+    const list = depts.map(d=>{
+      const hd=headOf(d), n=membersOf(d).length;
+      return `<button class="deptc ${d===sel?"on":""}" data-dept-sel="${esc(d)}">
+        <span class="deptc-ic">${I.depts}</span>
+        <span class="deptc-t"><b>${esc(d)}</b><small>${hd?("Глава: "+esc(hd.name)):"Глава не назначен"}</small></span>
+        <span class="deptc-n" title="участников">${n}</span></button>`;
+    }).join("");
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Департаменты</h2>
+        <p>8 департаментов «Летово Игра». У каждого — глава и свой чат. Писать в чаты департаментов могут только главы и штаб.</p></div></div>
+      <div class="depts-wrap">
+        <div class="depts-list">${list}</div>
+        <div class="dept-detail">${deptDetail(sel, headOf(sel), membersOf(sel))}</div>
+      </div>`;
+    const ta=el("chanText"); if(ta){ ta.value=U.chanDraft||""; ta.addEventListener("input",()=>{U.chanDraft=ta.value;}); }
+    const feed=document.querySelector(".chan-feed");
+    if(feed){
+      if(deptChanged || wasBottom || U._chanForceBottom) feed.scrollTop=feed.scrollHeight;
+      else feed.scrollTop=prevTop;   // читает историю — сохраняем позицию, а не прыгаем в начало
+    }
+    U._chanForceBottom=false;
+  }
+  function deptDetail(d, head, members){
+    const info=(S.dept_info||{})[d]||"";
+    const acc=(S.accounts||[]).find(a=>a.dept===d);
+    const curShort=(S.currency||{}).short||"ЭН";
+    const msgs=(S.channels||[]).filter(c=>c.dept===d);
+    const canMod = CAPS.decide || (ME.role==="dept_head" && ME.dept===d);
+    const feed = msgs.length ? msgs.map(m=>{
+      const rl=(S.roles[m.role]||{}).label||"";
+      const del = canMod ? `<button class="chan-del" data-del-chan="${m.id}" title="Удалить (модерация)">×</button>` : "";
+      return `<div class="chan-msg"><div class="chan-top"><b>${esc(m.author)}</b>${rl?`<span class="chan-role">${esc(rl)}</span>`:""}<span class="chan-time tnum">${hm(m.ts)}</span>${del}</div><div class="chan-body">${esc(m.text)}</div></div>`;
+    }).join("") : `<div class="empty-sm">В этом чате пока пусто.</div>`;
+    const composer = CAPS.chat
+      ? `<div class="chan-composer"><textarea id="chanText" maxlength="1000" placeholder="Сообщение в «${esc(d)}»…"></textarea><button class="btn primary" data-chan-send="${esc(d)}">${I.send} Отправить</button></div>`
+      : `<div class="cap-hint">${I.lock}Писать в чаты департаментов могут только главы и штаб. Читать может каждый.</div>`;
+    const memberRows = members.length ? members.map(u=>{
+      const isHead = head && u.id===head.id;
+      return `<div class="mem"><span class="mem-av">${esc(u.short||"?")}</span><span class="mem-n">${esc(u.name)}${isHead?` <span class="mem-crown" title="Глава">${I.crown}</span>`:""}</span><span class="mem-r">${esc((S.roles[u.role]||{}).label||u.role||"")}</span></div>`;
+    }).join("") : `<div class="empty-sm">Пока никто не приписан.</div>`;
+    return `
+      <div class="dd-head">
+        <div class="dd-title"><h3>${esc(d)}</h3><p>${esc(info)}</p></div>
+        <div class="dd-lead">${head?`<span class="dd-crown">${I.crown}</span><span><small>Глава департамента</small><b>${esc(head.name)}</b></span>`:`<span class="dd-nolead">Глава не назначен</span>`}</div>
+        ${acc?`<div class="dd-bal"><span class="dd-bal-ic">${I.coin}</span><span><small>Счёт департамента</small><b class="tnum">${fmtCoin(acc.balance)} ${esc(curShort)}</b></span></div>`:""}
+      </div>
+      <div class="dd-cols">
+        <div class="dd-chat">
+          <div class="dd-lbl">${I.chat} Чат департамента</div>
+          <div class="chan-feed">${feed}</div>
+          ${composer}
+        </div>
+        <div class="dd-members">
+          <div class="dd-lbl">Состав · ${members.length}</div>
+          ${memberRows}
+        </div>
+      </div>`;
+  }
+  async function sendChannel(dept){
+    const ta=el("chanText"); if(!ta) return; const text=ta.value.trim();
+    if(!text){ toast("Введите сообщение", true); return; }
+    try{ await api("/api/channels","POST",{dept, text}); U.chanDraft=""; ta.value=""; U._chanForceBottom=true; await refresh(); toast("Отправлено в «"+dept+"»"); }
+    catch(e){ handleAuthErr(e); }
+  }
+
+  /* ---- Создаваемые групповые чаты (личных диалогов нет) ---- */
+  function renderGroups(){
+    const groups=S.chat_groups||[];
+    const selected=groups.find(g=>String(g.id)===String(U.groupSel)) || groups[0] || null;
+    if(selected) U.groupSel=selected.id;
+    const prevFeed=document.querySelector(".group-feed");
+    const wasBottom=prevFeed ? (prevFeed.scrollHeight-prevFeed.scrollTop-prevFeed.clientHeight<56) : true;
+    const prevTop=prevFeed ? prevFeed.scrollTop : 0;
+    const changed=renderGroups._group!==String(selected&&selected.id);
+    renderGroups._group=String(selected&&selected.id);
+    const list=groups.map(g=>{
+      const count=(S.group_messages||[]).filter(m=>m.group_id===g.id).length;
+      return `<button class="group-card ${selected&&g.id===selected.id?"on":""}" data-group-sel="${g.id}">
+        <span class="group-card-icon">${I.chat}</span><span class="group-card-copy"><b>${esc(g.name)}</b><small>${g.members.length} участника · ${count} сообщ.</small></span>
+      </button>`;
+    }).join("");
+    const canCreate=(S.roster||[]).length>=3;
+    el("main").innerHTML=`
+      <div class="view-head"><div class="htext"><h2>Групповые чаты</h2>
+        <p>Создавайте рабочие комнаты от трёх участников. Личных диалогов в GreenNet нет — коммуникация остаётся командной и прозрачной.</p></div>
+        <button class="btn primary" data-new-group ${canCreate?"":"disabled"}>${I.plus} Новая группа</button></div>
+      ${!canCreate?`<div class="reg-note">Для первой группы нужны как минимум три зарегистрированных активных пользователя.</div>`:""}
+      <div class="groups-wrap">
+        <aside class="groups-list">${list||`<div class="groups-empty">${I.chat}<b>Комнат пока нет</b><span>Создайте первую рабочую группу и пригласите ещё двух участников.</span></div>`}</aside>
+        <section class="group-room">${selected?groupRoom(selected):`<div class="groups-empty room-empty">${I.chat}<b>Выберите или создайте группу</b><span>Здесь появится общая история сообщений.</span></div>`}</section>
+      </div>`;
+    const ta=el("groupText");
+    if(ta){ ta.value=U.groupDraft||""; ta.addEventListener("input",()=>{U.groupDraft=ta.value;}); }
+    const feed=document.querySelector(".group-feed");
+    if(feed){
+      if(changed||wasBottom||U._groupForceBottom) feed.scrollTop=feed.scrollHeight;
+      else feed.scrollTop=prevTop;
+    }
+    U._groupForceBottom=false;
+  }
+  function groupRoom(group){
+    const messages=(S.group_messages||[]).filter(m=>m.group_id===group.id);
+    const canManage=group.created_by===ME.id || ME.role==="admin";
+    const feed=messages.length ? messages.map(m=>{
+      const mine=m.author_id===ME.id;
+      const canDelete=mine||canManage;
+      return `<article class="group-message ${mine?"mine":""}">
+        <div class="group-message-top"><b>${esc(m.author)}</b><span class="tnum">${hm(m.ts)}</span>${canDelete?`<button class="chan-del" data-del-group-msg="${group.id}|${m.id}" title="Удалить сообщение">×</button>`:""}</div>
+        <div>${esc(m.text)}</div></article>`;
+    }).join("") : `<div class="groups-empty room-empty">${I.chat}<b>Начните разговор</b><span>Первое сообщение увидят все участники этой комнаты.</span></div>`;
+    const members=group.members.map(m=>`<span class="group-member" title="${esc((S.roles[m.role]||{}).label||m.role)}"><i>${esc(m.short||"?")}</i>${esc(m.name)}</span>`).join("");
+    return `<header class="group-room-head"><div><h3>${esc(group.name)}</h3><p>${esc(group.description||"Рабочая групповая комната")}</p></div>
+        ${canManage?`<button class="icon-btn danger-icon" data-del-group="${group.id}" title="Удалить группу">${I.trash}</button>`:""}</header>
+      <div class="group-members">${members}</div>
+      <div class="group-feed">${feed}</div>
+      <div class="group-composer"><textarea id="groupText" maxlength="1000" placeholder="Сообщение для всей группы…"></textarea>
+        <button class="btn primary" data-group-send="${group.id}">${I.send}<span>Отправить</span></button></div>
+      <div class="composer-tip">Ctrl + Enter — отправить · личные сообщения отключены</div>`;
+  }
+  function groupModal(){
+    const people=(S.roster||[]).filter(u=>u.id!==ME.id);
+    const checks=people.map(u=>`<label class="group-person"><input class="group-member-check" type="checkbox" value="${u.id}">
+      <span class="mem-av">${esc(u.short||"?")}</span><span><b>${esc(u.name)}</b><small>${esc(u.dept||"")}</small></span></label>`).join("");
+    openModal(`<h3>Новая групповая комната</h3><div class="sub">Вы будете добавлены автоматически. Выберите минимум двух коллег — комнаты на двоих не создаются.</div>
+      <div class="field"><label>Название</label><input id="g-name" maxlength="50" placeholder="Напр.: Координация сектора 4" autofocus></div>
+      <div class="field"><label>Описание</label><input id="g-desc" maxlength="180" placeholder="Цель и контекст группы"></div>
+      <div class="field"><label>Участники · минимум 2</label><div class="group-picker">${checks}</div></div>
+      <div class="form-err" id="g-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-group-save>${I.check} Создать группу</button></div>`);
+  }
+  async function saveGroup(){
+    const err=el("g-err"); err.textContent="";
+    const member_ids=[...document.querySelectorAll(".group-member-check:checked")].map(x=>Number(x.value));
+    if(member_ids.length<2){ err.textContent="Выберите минимум двух участников"; return; }
+    try{ const r=await api("/api/chat/groups","POST",{name:el("g-name").value,description:el("g-desc").value,member_ids});
+      U.groupSel=r.id; U.groupDraft=""; closeModal(); await refresh(); toast("Групповая комната создана"); }
+    catch(e){ if(e.status===401) handleAuthErr(e); else err.textContent=e.error||"Ошибка"; }
+  }
+  async function sendGroup(gid){
+    const ta=el("groupText"); if(!ta) return; const text=ta.value.trim();
+    if(!text){ toast("Введите сообщение",true); return; }
+    try{ await api(`/api/chat/groups/${gid}/messages`,"POST",{text}); U.groupDraft=""; ta.value=""; U._groupForceBottom=true; await refresh(); }
+    catch(e){ handleAuthErr(e); }
+  }
+  async function deleteGroup(gid){
+    if(!confirm("Удалить эту групповую комнату вместе со всей перепиской?")) return;
+    try{ await api(`/api/chat/groups/${gid}`,"DELETE"); U.groupSel=null; await refresh(); toast("Группа удалена"); }catch(e){ handleAuthErr(e); }
+  }
+  async function deleteGroupMessage(gid,mid){
+    if(!confirm("Удалить сообщение из группового чата?")) return;
+    try{ await api(`/api/chat/groups/${gid}/messages/${mid}`,"DELETE"); await refresh(); toast("Сообщение удалено"); }catch(e){ handleAuthErr(e); }
+  }
+
+  /* ---- Карта сети зондов NIMPH ---- */
+  const SENSOR_PARAM_LABELS={
+    battery:"Батарея",CO2:"CO₂",GH:"Общая жёсткость",KH:"Карбонатная жёсткость",NH4:"Аммоний",NO2:"Нитриты",NO3:"Нитраты",
+    PM10:"Частицы PM10",PO4:"Фосфаты",VOC:"Летучие соединения",air_humidity:"Влажность воздуха",air_light:"Освещённость воздуха",
+    air_temp:"Температура воздуха",conductivity:"Проводимость",dissolved_O2:"Растворённый O₂",pH:"pH",soil_light:"Освещённость почвы",
+    soil_moisture:"Влажность почвы",soil_temp:"Температура почвы",turbidity:"Мутность",water_temp:"Температура воды",
+    wind_direction:"Направление ветра",wind_speed:"Скорость ветра"
+  };
+  const SENSOR_TYPE_LABELS={water:"Вода",soil:"Почва",air:"Воздух"};
+  const BRAZIL_BOUNDS={minLon:-73.9856,maxLon:-34.7932,minLat:-33.7439,maxLat:5.2673};
+  const SENSOR_TYPE_PURPOSE={
+    water:"контролирует качество поверхностной воды и помогает замечать химические или биологические отклонения",
+    soil:"отслеживает состояние почвы, влажность и условия для растительности",
+    air:"измеряет состояние атмосферы, погодные условия и возможное загрязнение воздуха"
+  };
+  function sensorFieldMs(value){ if(!value) return NaN; return Date.parse(String(value).replace(" ","T")+"Z"); }
+  function sensorFresh(sensor,mission){ const a=sensorFieldMs(mission),b=sensorFieldMs(sensor.last_timestamp); return isFinite(a)&&isFinite(b)&&(a-b)<=180000; }
+  function sensorBrazilArea(sensor,withPreposition=false){
+    const lat=Number(sensor.latitude),lon=Number(sensor.longitude);
+    if(!isFinite(lat)||!isFinite(lon)) return "неопределённый район";
+    let area;
+    if(lat>-10) area=lon<-55?"северо-запад":lon>-44?"северо-восток":"север";
+    else if(lat<-23) area=lon<-53?"юго-запад":lon>-46?"юго-восток":"юг";
+    else area=lon<-55?"запад":lon>-46?"восток":"центр";
+    if(!withPreposition) return `${area} Бразилии`;
+    return "в "+({"северо-запад":"северо-западной части Бразилии","северо-восток":"северо-восточной части Бразилии",север:"северной части Бразилии","юго-запад":"юго-западной части Бразилии","юго-восток":"юго-восточной части Бразилии",юг:"южной части Бразилии",запад:"западной части Бразилии",восток:"восточной части Бразилии",центр:"центральной части Бразилии"}[area]);
+  }
+  function sensorDescription(sensor,mission){
+    const kind={water:"Водный",soil:"Почвенный",air:"Атмосферный"}[sensor.sensor_type]||"Экологический";
+    const primary=Object.entries(sensor.parameters||{}).filter(([,r])=>r.primary).slice(0,5).map(([name])=>SENSOR_PARAM_LABELS[name]||name);
+    const bad=Object.values(sensor.parameters||{}).filter(r=>r.quality_flag==="WARN"||r.quality_flag==="FAIL").length;
+    const hasBattery=sensor.battery_percent!=null&&isFinite(Number(sensor.battery_percent)),battery=hasBattery?Number(sensor.battery_percent):NaN,batteryText=hasBattery?`Заряд батареи ${sensorValue(battery)}%.`:"Сведения о батарее пока не получены.";
+    const linkText=sensorFresh(sensor,mission)?"Станция передавала данные в последние три минуты.":sensor.last_timestamp?`Последний пакет получен ${sensor.last_timestamp}.`:"Текущая телеметрия станции пока недоступна.";
+    const metrics=primary.length?`Основные наблюдения: ${primary.join(", ")}.`:"Набор основных показаний будет добавлен после следующей передачи.";
+    const quality=bad?`В ${bad} показаниях есть предупреждения или критические отклонения.`:"Доступные показания не содержат предупреждений качества.";
+    return `${kind} зонд ${sensor.sensor_id} расположен ${sensorBrazilArea(sensor,true)} и ${SENSOR_TYPE_PURPOSE[sensor.sensor_type]||"ведёт экологический мониторинг территории"}. ${metrics} ${linkText} ${batteryText} ${quality}`;
+  }
+  function sensorMetric(sensor,param){
+    if(param==="battery") return {value:sensor.battery_percent,unit:"%",quality:null};
+    const row=(sensor.parameters||{})[param]; return row||{value:null,unit:"",quality_flag:null};
+  }
+  function sensorValue(value){ return value==null||!isFinite(Number(value))?"—":Number(value).toLocaleString("ru-RU",{maximumFractionDigits:3}); }
+  function sensorQuality(sensor){
+    const q=Object.values(sensor.parameters||{}).map(x=>x.quality_flag).filter(Boolean);
+    return q.includes("FAIL")?"FAIL":q.includes("WARN")?"WARN":q.length?"OK":"—";
+  }
+  function sensorColor(sensor,param,min,max){
+    const metric=sensorMetric(sensor,param); const quality=metric.quality_flag;
+    if(quality==="FAIL") return "#ea4335"; if(quality==="WARN") return "#f9ab00";
+    const value=Number(metric.value); if(metric.value==null||!isFinite(value)) return "#9aa0a6";
+    if(param==="battery") return value<25?"#ea4335":value<55?"#f9ab00":"#34a853";
+    const t=max>min?Math.max(0,Math.min(1,(value-min)/(max-min))):.5;
+    return `hsl(${218+92*t} 72% ${54+4*t}%)`;
+  }
+  async function loadSensors(force){
+    if(SENSOR_UI.loading) return;
+    SENSOR_UI.loading=true; SENSOR_UI.error=null;
+    if(U.view==="sensors") renderSensors();
+    try{
+      SENSOR_UI.data=await api(force?"/api/sensors/refresh":"/api/sensors/snapshot",force?"POST":"GET",force?{}:undefined);
+      SENSOR_UI.loadedAt=Date.now();
+      if(force) toast(SENSOR_UI.data.stale?"Показан последний сохранённый снимок":"Данные зондов обновлены");
+    }catch(e){ SENSOR_UI.error=e.error||"Не удалось загрузить сеть зондов"; }
+    finally{ SENSOR_UI.loading=false; if(U.view==="sensors") renderSensors(); }
+  }
+  function renderSensors(){
+    const head=`<div class="view-head sensor-view-head"><div class="htext"><h2>Карта сети зондов</h2>
+      <p>Оперативный HTML-срез NIMPH: положение станций, батарея, качество и все доступные показания на полевое время.</p></div>
+      <div class="sensor-head-actions"><a class="btn ghost" href="http://nimph.fial-corporation.ru/monitor" target="_blank" rel="noopener">Источник NIMPH ↗</a>
+      <button class="btn primary" data-sensor-refresh ${SENSOR_UI.loading?"disabled":""}>${I.sensors} ${SENSOR_UI.loading?"Обновляю…":"Обновить"}</button></div></div>`;
+    if(!SENSOR_UI.data){
+      el("main").innerHTML=head+`${SENSOR_UI.error?`<div class="sensor-alert error">${esc(SENSOR_UI.error)} <button class="btn sm" data-sensor-refresh>Повторить</button></div>`:""}
+        <div class="sensor-loading"><div class="sensor-orbit">${I.sensors}</div><b>${SENSOR_UI.loading?"Получаю полный срез 180 зондов…":"Карта ещё не загружена"}</b><span>Сервер собирает HTML-карточки воды, почвы и воздуха.</span></div>`;
+      if(!SENSOR_UI.loading&&!SENSOR_UI.error) loadSensors(false);
+      return;
+    }
+    const data=SENSOR_UI.data, all=data.sensors||[];
+    if(!U.sensorType) U.sensorType="all"; if(!U.sensorParam) U.sensorParam="battery"; if(U.sensorSearch==null) U.sensorSearch="";
+    const paramSet=new Set(); all.forEach(s=>Object.keys(s.parameters||{}).forEach(p=>paramSet.add(p)));
+    const params=["battery",...Array.from(paramSet).sort((a,b)=>(SENSOR_PARAM_LABELS[a]||a).localeCompare(SENSOR_PARAM_LABELS[b]||b,"ru"))];
+    if(!params.includes(U.sensorParam)) U.sensorParam="battery";
+    const query=String(U.sensorSearch||"").trim().toUpperCase();
+    const filtered=all.filter(s=>(U.sensorType==="all"||s.sensor_type===U.sensorType)&&(!query||s.sensor_id.includes(query)));
+    let selected=all.find(s=>String(s.sensor_id)===String(U.sensorSelected));
+    if(!selected||!filtered.some(s=>s.sensor_id===selected.sensor_id)) selected=filtered[0]||null;
+    if(selected) U.sensorSelected=selected.sensor_id;
+    const fresh=all.filter(s=>sensorFresh(s,data.mission_now)).length;
+    const problems=all.filter(s=>sensorQuality(s)!=="OK").length;
+    const low=all.filter(s=>s.battery_percent!=null&&s.battery_percent<25).length;
+    const counts={all:all.length,water:all.filter(s=>s.sensor_type==="water").length,soil:all.filter(s=>s.sensor_type==="soil").length,air:all.filter(s=>s.sensor_type==="air").length};
+    const unitByParam={}; (data.parameters||[]).forEach(p=>unitByParam[p.name]=p.unit||"");
+    const options=params.map(p=>`<option value="${esc(p)}" ${p===U.sensorParam?"selected":""}>${esc(SENSOR_PARAM_LABELS[p]||p)}${unitByParam[p]?` · ${esc(unitByParam[p])}`:""}</option>`).join("");
+    const typeButtons=["all","water","soil","air"].map(type=>`<button class="sensor-filter ${U.sensorType===type?"on":""} ${type}" data-sensor-type="${type}"><i></i>${type==="all"?"Все":SENSOR_TYPE_LABELS[type]} <span>${counts[type]}</span></button>`).join("");
+    const status=data.stale?`<div class="sensor-alert warning"><b>Автономный режим.</b> NIMPH временно недоступен — показан сохранённый снимок от ${esc(data.collected_at||"—")}.</div>`:
+      data.partial?`<div class="sensor-alert warning"><b>Частичный срез.</b> Один из больших HTML-ответов NIMPH задержался: все станции показаны по реестру, но у части могут отсутствовать текущие показания. Следующее обновление дополнит их.</div>`:"";
+    el("main").innerHTML=head+status+`${SENSOR_UI.error?`<div class="sensor-alert error">${esc(SENSOR_UI.error)}</div>`:""}
+      <div class="sensor-sourcebar"><span class="sensor-live-dot ${data.stale||data.partial?"stale":""}"></span><span>${data.stale?"сохранённый снимок":data.partial?"частичный live-срез":"данные получены"}</span><b>${esc(data.mission_now||"—")}</b><span>· ${data.count||all.length} станций</span></div>
+      <div class="sensor-stats">
+        <div><span>Всего</span><b>${all.length}</b><small>зондов в реестре</small></div>
+        <div class="ok"><span>На связи</span><b>${fresh}</b><small>передавали ≤ 3 мин</small></div>
+        <div class="warn"><span>Качество</span><b>${problems}</b><small>WARN / FAIL / пропуски</small></div>
+        <div class="crit"><span>Батарея</span><b>${low}</b><small>ниже 25%</small></div>
+      </div>
+      <div class="sensor-toolbar">
+        <label class="sensor-search">${I.sensors}<input id="sensor-search" value="${esc(U.sensorSearch)}" placeholder="Найти W001, A015…" autocomplete="off"></label>
+        <div class="sensor-filters">${typeButtons}</div>
+        <label class="sensor-param"><span>Цвет карты</span><select id="sensor-param">${options}</select></label>
+      </div>
+      <div class="sensor-map-layout">
+        ${sensorMapHTML(all,filtered,U.sensorParam,selected)}
+        ${sensorDetailHTML(selected,data.mission_now)}
+      </div>
+      ${sensorListHTML(filtered,U.sensorParam,selected)}`;
+  }
+  function sensorMapHTML(all,filtered,param,selected){
+    const B=BRAZIL_BOUNDS;
+    const coords=all.filter(s=>isFinite(s.latitude)&&isFinite(s.longitude)&&s.longitude>=B.minLon&&s.longitude<=B.maxLon&&s.latitude>=B.minLat&&s.latitude<=B.maxLat);
+    if(!coords.length) return `<div class="sensor-map-card"><div class="empty-sm">Нет координат для отображения.</div></div>`;
+    const shown=filtered.filter(s=>coords.some(c=>c.sensor_id===s.sensor_id));
+    const metrics=shown.map(s=>Number(sensorMetric(s,param).value)).filter(Number.isFinite),min=metrics.length?Math.min(...metrics):0,max=metrics.length?Math.max(...metrics):1;
+    const markers=shown.map(s=>{
+      const x=(s.longitude-B.minLon)/(B.maxLon-B.minLon)*100,y=(B.maxLat-s.latitude)/(B.maxLat-B.minLat)*100,metric=sensorMetric(s,param),color=sensorColor(s,param,min,max);
+      const label=`${s.sensor_id} · ${SENSOR_PARAM_LABELS[param]||param}: ${sensorValue(metric.value)} ${metric.unit||""}`;
+      return `<button class="sensor-marker ${s.sensor_type} ${selected&&selected.sensor_id===s.sensor_id?"selected":""}" style="left:${x.toFixed(3)}%;top:${y.toFixed(3)}%;--sensor-color:${color}" data-sensor-id="${esc(s.sensor_id)}" title="${esc(label)}" aria-label="${esc(label)}"><i></i></button>`;
+    }).join("");
+    const metricLabel=SENSOR_PARAM_LABELS[param]||param;
+    return `<section class="sensor-map-card"><div class="sensor-map-title"><div><b>Карта Бразилии</b><span>реальные широта и долгота · система WGS 84</span></div><div class="sensor-map-count">Показано <b>${shown.length}</b></div></div>
+      <div class="sensor-map">
+        <img class="sensor-brazil-shape" src="/static/brazil-states.svg" alt="Границы штатов Бразилии по данным IBGE">
+        <span class="sensor-place amazon">Амазония</span><span class="sensor-place brasilia">Бразилиа</span><span class="sensor-place sao-paulo">Сан-Паулу</span><span class="sensor-place atlantic">Атлантический океан</span>
+        <span class="sensor-compass"><b>С</b><i></i></span>
+        <span class="sensor-coord nw">5,27° с.ш. · 73,99° з.д.</span><span class="sensor-coord se">33,74° ю.ш. · 34,79° з.д.</span>${markers}
+      </div>
+      <div class="sensor-map-legend"><span><i class="water"></i>Вода</span><span><i class="soil"></i>Почва</span><span><i class="air"></i>Воздух</span><span class="sensor-map-credit">Границы штатов: IBGE</span><span class="metric"><b>${esc(metricLabel)}</b>: ${sensorValue(min)} — ${sensorValue(max)}</span></div></section>`;
+  }
+  function sensorDetailHTML(sensor,mission){
+    if(!sensor) return `<aside class="sensor-detail"><div class="groups-empty room-empty">${I.sensors}<b>Зонды не найдены</b><span>Измените фильтр или поисковый запрос.</span></div></aside>`;
+    const rows=Object.entries(sensor.parameters||{}).sort((a,b)=>(+!a[1].primary)-(+!b[1].primary)||a[0].localeCompare(b[0])).map(([name,row])=>{
+      const q=(row.quality_flag||"missing").toLowerCase();
+      return `<div class="sensor-reading"><span><b>${esc(SENSOR_PARAM_LABELS[name]||name)}</b><small>${row.primary?"основной":"технический"} · ${esc(row.timestamp||"—")}</small></span><strong>${sensorValue(row.value)} <i>${esc(row.unit||"")}</i></strong><em class="q-${q}">${esc(row.quality_flag||"—")}</em></div>`;
+    }).join("");
+    const hasBattery=sensor.battery_percent!=null&&isFinite(Number(sensor.battery_percent)),battery=hasBattery?Math.max(0,Math.min(100,Number(sensor.battery_percent))):0,quality=sensorQuality(sensor);
+    return `<aside class="sensor-detail"><div class="sensor-detail-head ${sensor.sensor_type}"><span class="sensor-detail-icon">${I.sensors}</span><div><h3>${esc(sensor.sensor_id)}</h3><p>${esc(SENSOR_TYPE_LABELS[sensor.sensor_type]||sensor.sensor_type)} · пакет #${esc(sensor.packet_id==null?"—":sensor.packet_id)}</p></div><span class="sensor-fresh ${sensorFresh(sensor,mission)?"on":""}">${sensorFresh(sensor,mission)?"на связи":"нет свежих данных"}</span></div>
+      <div class="sensor-description"><span>Описание зонда</span><p>${esc(sensorDescription(sensor,mission))}</p></div>
+      <div class="sensor-detail-meta"><div><span>Район карты</span><b>${esc(sensorBrazilArea(sensor))}</b></div><div><span>Координаты</span><b>${Number(sensor.latitude).toFixed(5)}, ${Number(sensor.longitude).toFixed(5)}</b></div><div><span>Последняя передача</span><b>${esc(sensor.last_timestamp||"—")}</b></div></div>
+      <div class="sensor-health"><div class="sensor-battery" style="--battery:${battery}"><b>${hasBattery?battery.toFixed(0)+"%":"—"}</b><span>батарея</span></div><div><span>Качество пакета</span><b class="quality-${quality.toLowerCase()}">${esc(quality)}</b><small>${Object.keys(sensor.parameters||{}).length} параметров</small></div></div>
+      <div class="sensor-readings-head"><b>Текущие показания</b><span>${rows?"полевой срез":"нет данных"}</span></div><div class="sensor-readings">${rows||'<div class="empty-sm">Показания отсутствуют</div>'}</div></aside>`;
+  }
+  function sensorListHTML(filtered,param,selected){
+    const cards=filtered.slice(0,24).map(s=>{const metric=sensorMetric(s,param),q=sensorQuality(s);return `<button class="sensor-list-card ${s.sensor_type} ${selected&&selected.sensor_id===s.sensor_id?"on":""}" data-sensor-id="${esc(s.sensor_id)}"><span class="sensor-list-dot"></span><span><b>${esc(s.sensor_id)}</b><small>${esc(SENSOR_TYPE_LABELS[s.sensor_type]||s.sensor_type)} · 🔋 ${sensorValue(s.battery_percent)}%</small></span><strong>${sensorValue(metric.value)} <i>${esc(metric.unit||"")}</i></strong><em class="q-${q.toLowerCase()}">${esc(q)}</em></button>`}).join("");
+    return `<section class="sensor-list-section"><div class="sensor-list-head"><div><b>Станции в выборке</b><span>${filtered.length>24?`Первые 24 из ${filtered.length}`:`${filtered.length} станций`}</span></div><small>Нажмите на станцию, чтобы открыть карточку</small></div><div class="sensor-list-grid">${cards||'<div class="empty-sm">По фильтру ничего не найдено.</div>'}</div></section>`;
+  }
+
+  /* ---- Finance (энеоины) ---- */
+  function fmtCoin(n){ return (Number(n)||0).toLocaleString("ru-RU"); }
+  function renderFinance(){
+    const cur=(S.currency||{short:"ЭН",name:"энеоин"});
+    const accs=S.accounts||[]; const txs=S.transactions||[];
+    const total=accs.reduce((s,a)=>s+(a.balance||0),0);
+    const cards=accs.length ? accs.map(a=>`<div class="acc-card">
+      <div class="acc-d">${esc(a.dept)}</div>
+      <div class="acc-b tnum">${fmtCoin(a.balance)} <span class="acc-u">${esc(cur.short)}</span></div></div>`).join("")
+      : `<div class="empty-sm">Счетов пока нет.</div>`;
+    const form = CAPS.finance ? financeForm(cur) : `<div class="cap-hint">${I.lock}Переводить энеоины могут только штаб и администратор. Остальные видят балансы.</div>`;
+    const txRows = txs.length ? txs.map(t=>{
+      const emis=!t.from;
+      return `<div class="tx-row"><div class="tx-ico ${emis?"emis":""}">${emis?"+":"→"}</div>
+        <div class="tx-main"><div class="tx-route">${emis?`<b>Эмиссия</b> → ${esc(t.to)}`:`${esc(t.from)} → <b>${esc(t.to)}</b>`}</div>${t.note?`<div class="tx-note">${esc(t.note)}</div>`:""}
+          <div class="tx-meta"><span>${esc(t.actor||"")}</span> · <span class="tnum">${hm(t.ts)}</span></div></div>
+        <div class="tx-amt tnum">${emis?"+":""}${fmtCoin(t.amount)} ${esc(cur.short)}</div></div>`;
+    }).join("") : `<div class="empty-sm">Операций пока не было.</div>`;
+    el("main").innerHTML=`
+      <div class="view-head"><div class="htext"><h2>Финансы · энеоины</h2>
+        <p>Игровая валюта корпорации. У каждого департамента — свой счёт. Переводы и выпуск (эмиссию) ведут штаб и администратор.</p></div>
+        <div class="fin-total"><small>В обороте</small><b class="tnum">${fmtCoin(total)} ${esc(cur.short)}</b></div></div>
+      <div class="fin-wrap">
+        <div class="fin-left">
+          <div class="dd-lbl">${I.coin} Счета департаментов</div>
+          <div class="acc-grid">${cards}</div>
+          ${form}
+        </div>
+        <div class="fin-right">
+          <div class="dd-lbl">История операций</div>
+          <div class="tx-list">${txRows}</div>
+        </div>
+      </div>`;
+  }
+  function financeForm(cur){
+    const opts=(S.depts||[]).map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("");
+    const emisOpt = CAPS.manage ? `<option value="">— Эмиссия (выпуск новых) —</option>` : "";
+    return `<div class="fin-form">
+      <div class="dd-lbl">Перевод / выпуск</div>
+      <div class="fin-grid">
+        <label>Откуда<select id="fin-from">${emisOpt}${opts}</select></label>
+        <label>Куда<select id="fin-to">${opts}</select></label>
+        <label>Сумма (${esc(cur.short)})<input id="fin-amount" type="number" min="1" placeholder="напр. 500"></label>
+      </div>
+      <input id="fin-note" class="fin-note-in" placeholder="Комментарий: за что перевод">
+      <div class="form-err" id="fin-err"></div>
+      <button class="btn primary" data-fin-send>${I.coin} Провести операцию</button>
+    </div>`;
+  }
+  async function financeSend(){
+    const err=el("fin-err"); if(err) err.textContent="";
+    const from=el("fin-from")?el("fin-from").value:"";
+    const to=el("fin-to").value;
+    const amount=parseInt(el("fin-amount").value,10);
+    const note=el("fin-note").value;
+    if(!to){ if(err) err.textContent="Выберите получателя"; return; }
+    if(!(amount>0)){ if(err) err.textContent="Введите сумму больше нуля"; return; }
+    if(from && from===to){ if(err) err.textContent="Отправитель и получатель совпадают"; return; }
+    try{ await api("/api/finance/tx","POST",{from:from||null, to, amount, note}); await refresh(); toast("Операция проведена"); }
+    catch(e){ if(e.status===401){handleAuthErr(e);} else if(err){err.textContent=e.error||"Ошибка";} else toast(e.error||"Ошибка",true); }
+  }
+
+  /* ---- Tasks ---- */
+  function renderTasks(){
+    const cols=[{k:"new",c:"new",t:"Новые"},{k:"prog",c:"prog",t:"В работе"},{k:"done",c:"done",t:"Выполнено"}];
+    const canCreate = CAPS.task_create!=="none";
+    const createBtn = canCreate ? `<button class="btn primary" data-new-task>${I.plus} Новая задача</button>` : `<div class="cap-hint">${I.lock}Задачи ставят старшие специалисты и руководители.</div>`;
+    const board = cols.map(col=>{ const items=S.tasks.filter(t=>t.status===col.k);
+      const cards=items.map(taskCard).join("")||`<div style="color:var(--text-faint);font-size:12px;text-align:center;padding:14px 0">пусто</div>`;
+      return `<div class="col ${col.c}"><div class="col-h"><span class="t"><span class="d"></span>${col.t}</span><span class="cnt tnum">${items.length}</span></div>${cards}</div>`; }).join("");
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Задачи</h2><p>Каждая проблема превращается в задачу с исполнителем, сроком и статусом. Выполненное закрывается автоматически.</p></div>${createBtn}</div>
+      <div class="board">${board}</div>`;
+  }
+  function taskCard(t){
+    const over = t.status!=="done" && t.due && new Date(t.due)<serverNow();
+    const duePill = t.status==="done"?`<span class="tpill">${I.check} закрыта</span>`:(t.due?`<span class="tpill ${over?"over":"due"}">⏱ до ${hm(t.due)}</span>`:"");
+    const canClose = t.status!=="done" && (CAPS.task_close==="all" || (CAPS.task_close==="own" && t.dept===ME.dept));
+    const canAdvance = t.status==="new" && CAPS.task_create!=="none";
+    let acts="";
+    if(canAdvance) acts+=`<button class="btn sm ghost" data-task-start="${t.id}">${I.arrow} В работу</button>`;
+    if(canClose) acts+=`<button class="btn sm primary" data-task-done="${t.id}">${I.check} Закрыть</button>`;
+    return `<div class="task ${t.status==="done"?"done":""}">
+        <h4>${esc(t.title)}</h4>${t.descr?`<div class="desc">${esc(t.descr)}</div>`:""}
+        <div class="tmeta"><span class="tpill">${esc(t.dept)}</span><span class="tpill">👤 ${esc(t.assignee)}</span>${duePill}</div>
+        <div class="tacts">${acts}</div></div>`;
+  }
+
+  /* ---- KB ---- */
+  function renderKB(){
+    const items=S.knowledge.slice().reverse();
+    const cards = items.length ? items.map(k=>{ const cv=MSG_COLOR[k.type]||"--c-blue"; const label=(S.msg_types[k.type]||{}).label||"Запись";
+      const vtag = k.verify==="verified"?`<span class="vstate verified">${I.check}Подтверждено</span>`:`<span class="vstate unverified">Не подтверждено</span>`;
+      return `<div class="kb-card" style="${cvar(cv)}">
+        <span class="cat"><span style="width:7px;height:7px;border-radius:50%;background:var(${cv})"></span>${esc(label)}</span>
+        <h4>${esc(k.title)}</h4><div class="kb-body">${esc(k.body)}</div>
+        <div class="kb-body" style="color:var(--text-faint);font-size:11.5px">📍 ${esc(k.where)}</div>
+        <div class="kb-foot">${vtag}<span class="who">${esc(k.who)}</span><span class="time tnum">${hm(k.ts)}</span></div></div>`; }).join("")
+      : `<div class="empty">${I.kb}<div>База знаний пуста. Подтверждённые данные из ленты попадают сюда автоматически.</div></div>`;
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>База знаний</h2><p>Каждая новая информация сохраняется навсегда: где нашли, кто нашёл, результаты анализа. Ничего не теряется.</p></div></div>
+      <div class="kb-grid">${cards}</div>`;
+  }
+
+  /* ---- Map ---- */
+  function renderMap(){
+    const kindColor={focus:"--c-red",lab:"--c-blue",drone:"--accent",team:"--c-amber",intake:"--c-purple"};
+    const sevColor={high:"--c-red",medium:"--c-amber",low:"--c-green"};
+    const sz=(S.settings.safe_zone||"16,74,150,74").split(",").map(Number);
+    const markers=S.map_objects.map(o=>{
+      if(o.kind==="focus"){ const c=sevColor[o.sev]||"--c-red"; return `<div class="marker focus" style="left:${o.x}%;top:${o.y}%;--mk:var(${c})" data-mapobj="${o.id}"><div class="mk-core"></div><span class="mk-lb">${esc(o.label)}</span></div>`; }
+      const glyph={lab:"🧪",drone:"◭",team:"◈",intake:"⬗"}[o.kind]||"•"; const c=kindColor[o.kind]||"--accent";
+      return `<div class="marker ${esc(o.kind)}" style="left:${o.x}%;top:${o.y}%;--mk:var(${c})" data-mapobj="${o.id}"><div class="mk-core">${glyph}</div><span class="mk-lb">${esc(o.label)}</span></div>`; }).join("");
+    const legend=[["dot","--c-red","Очаг заражения","цвет = уровень опасности"],["sq","--c-blue","Лаборатория","анализ проб"],["dot","--accent","Дрон-разведчик","аэросъёмка"],["sq","--c-amber","Группа специалистов","работа на месте"],["sq","--c-purple","Водозабор","точка защиты"],["sq","--ok","Безопасная зона","эвакуация / штаб"]]
+      .map(([sh,c,t,s])=>`<div class="lg"><span class="m ${sh}" style="${sh==="dot"?`background:var(${c})`:`color:var(${c})`}"></span><span>${t}<small>${s}</small></span></div>`).join("");
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Оперативная карта</h2><p>Очаги, лаборатории, дроны, группы и безопасные зоны на одной карте. Руководитель видит ситуацию целиком.</p></div></div>
+      <div class="map-wrap">
+        <div class="map-stage">
+          <svg class="terrain" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="riv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--c-blue)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity=".16"/></linearGradient>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="var(--border)" stroke-width="1"/></pattern>
+            </defs>
+            <rect width="800" height="500" fill="var(--surface-2)"/><rect width="800" height="500" fill="url(#grid)"/>
+            <path d="M120 90 C 230 170, 300 210, 360 260 S 520 360, 700 430 L 730 500 L 60 500 L 90 120 Z" fill="var(--surface-3)" opacity=".5"/>
+            <path d="M150 60 C 250 150, 330 210, 400 270 S 560 380, 720 470" fill="none" stroke="url(#riv)" stroke-width="34" stroke-linecap="round"/>
+            <path d="M150 60 C 250 150, 330 210, 400 270 S 560 380, 720 470" fill="none" stroke="var(--c-blue)" stroke-width="1.5" stroke-dasharray="4 8" opacity=".5"/>
+          </svg>
+          <div class="safe-zone" style="left:${sz[0]}%;top:${sz[1]}%;width:${sz[2]}px;height:${sz[3]}px"><span>Безопасная зона</span></div>
+          ${markers}
+        </div>
+        <div class="legend"><h4>Легенда</h4>${legend}</div>
+      </div>`;
+  }
+
+  /* ---- Log ---- */
+  function renderLog(){
+    const items=S.log.slice().reverse();
+    const list=items.map(l=>`<div class="log-item"><div class="lt tnum">${hm(l.ts)}</div><div class="log-rail"><div class="ld"></div></div><div class="lc"><span class="who">${esc(l.actor)}</span> ${l.action}</div></div>`).join("");
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Журнал событий</h2><p>Все действия записываются в хронологии. Потом можно восстановить всю историю инцидента поминутно.</p></div></div>
+      <div class="panel" style="background:var(--surface)">${list||'<div class="empty">Пусто</div>'}</div>`;
+  }
+
+  /* ---- Admin ---- */
+  function renderAdmin(){
+    const rows=(S.roster||[]).map(u=>{
+      const roleOpts=S.role_order.map(rk=>`<option value="${rk}" ${rk===u.role?"selected":""}>${esc(S.roles[rk].label)}</option>`).join("");
+      const deptOpts=S.depts.map(d=>`<option ${d===u.dept?"selected":""}>${esc(d)}</option>`).join("");
+      const isMe = u.id===ME.id;
+      return `<tr>
+        <td><div class="uname">${esc(u.name)}${isMe?' <span class="lbl" style="color:var(--accent-strong)">вы</span>':''}</div><div class="ulogin">@${esc(u.username||"—")}</div></td>
+        <td><select class="miniselect" data-urole="${u.id}" ${isMe?"disabled":""}>${roleOpts}</select></td>
+        <td><select class="miniselect" data-udept="${u.id}">${deptOpts}</select></td>
+        <td><span class="dotstatus ${u.active?"on":"off"}"></span>${u.active?"активен":"отключён"}</td>
+        <td style="text-align:right; white-space:nowrap">
+          <button class="btn sm ghost" data-upass="${u.id}" title="Сменить пароль">${I.lock}</button>
+          <button class="btn sm ghost" data-utoggle="${u.id}|${u.active?0:1}" ${isMe?"disabled":""}>${u.active?"Откл.":"Вкл."}</button>
+          <button class="btn sm danger" data-udel="${u.id}" ${isMe?"disabled":""}>${I.trash}</button>
+        </td></tr>`;
+    }).join("");
+    el("main").innerHTML = `
+      <div class="view-head"><div class="htext"><h2>Управление пользователями</h2><p>Создавайте участников, выдавайте роли и департаменты, отключайте доступ. Все изменения фиксируются в журнале.</p></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <a class="btn ghost" href="/api/users.csv" download>CSV пользователей</a>
+          <button class="btn ghost" data-reset-all title="Сбросить весь сценарий">Сбросить сценарий</button>
+          <button class="btn primary" data-new-user>${I.plus} Новый пользователь</button>
+        </div></div>
+      <div class="table-wrap"><table class="utable">
+        <thead><tr><th>Пользователь</th><th>Роль</th><th>Департамент</th><th>Статус</th><th style="text-align:right">Действия</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+  }
+
+  /* ---------------- Modals ---------------- */
+  function openModal(html){ el("modal-root").innerHTML=`<div class="modal-bg" data-modal-bg><div class="modal">${html}</div></div>`; }
+  function closeModal(){ el("modal-root").innerHTML=""; }
+
+  function taskModal(prefill){
+    prefill=prefill||{};
+    openModal(`<h3>Новая задача</h3><div class="sub">Проблема из ленты превращается в задачу с исполнителем и сроком.</div>
+      <div class="field"><label>Название</label><input id="tk-title" value="${esc(prefill.title||"")}" placeholder="Что нужно сделать"></div>
+      <div class="field"><label>Описание</label><textarea id="tk-desc" rows="2" placeholder="Детали, контекст">${esc(prefill.desc||"")}</textarea></div>
+      <div class="two-col">
+        <div class="field"><label>Департамент</label><select id="tk-dept">${S.depts.map(d=>`<option ${d===(prefill.dept||ME.dept)?"selected":""}>${esc(d)}</option>`).join("")}</select></div>
+        <div class="field"><label>Исполнитель (назначенный человек)</label>
+          <input id="tk-assignee" list="tk-assignee-list" value="${esc(prefill.assignee||"")}" placeholder="Начните вводить имя участника">
+          <datalist id="tk-assignee-list">${(S.roster||[]).map(u=>`<option value="${esc(u.name)}">${esc((S.roles[u.role]||{}).label||"")} · ${esc(u.dept||"")}</option>`).join("")}${(S.depts||[]).map(d=>`<option value="${esc(d)}">департамент</option>`).join("")}</datalist></div>
+      </div>
+      <div class="field"><label>Срок (сегодня, ЧЧ:ММ)</label><input id="tk-due" value="18:00" placeholder="18:00"></div>
+      <div class="form-err" id="tk-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-task-save>${I.check} Создать</button></div>`);
+  }
+  function userModal(){
+    openModal(`<h3>Новый пользователь</h3><div class="sub">Участник сможет войти по логину и паролю. Роль определяет его права.</div>
+      <div class="field"><label>Логин</label><input id="u-username" placeholder="ivanov"></div>
+      <div class="two-col">
+        <div class="field"><label>Имя</label><input id="u-first" placeholder="Иван"></div>
+        <div class="field"><label>Фамилия</label><input id="u-last" placeholder="Иванов"></div>
+      </div>
+      <div class="field"><label>Пароль</label><input id="u-pass" type="password" autocomplete="new-password" placeholder="мин. 6 символов"></div>
+      <div class="two-col">
+        <div class="field"><label>Роль</label><select id="u-role">${S.role_order.map(rk=>`<option value="${rk}" ${rk==="specialist"?"selected":""}>${esc(S.roles[rk].label)}</option>`).join("")}</select></div>
+        <div class="field"><label>Департамент</label><select id="u-dept">${S.depts.map(d=>`<option ${d==="Научный департамент"?"selected":""}>${esc(d)}</option>`).join("")}</select></div>
+      </div>
+      <div class="form-err" id="u-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-user-save>${I.check} Создать</button></div>`);
+  }
+  function passModal(uid){
+    openModal(`<h3>Сменить пароль</h3><div class="sub">Новый пароль вступит в силу немедленно.</div>
+      <div class="field"><label>Новый пароль</label><input id="p-pass" type="password" placeholder="мин. 6 символов" autofocus></div>
+      <div class="form-err" id="p-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-pass-save="${uid}">Сохранить</button></div>`);
+  }
+
+  function licenseModal(){
+    openModal(`<h3>Лицензия и авторские права</h3>
+      <div class="sub">GreenNet Crisis</div>
+      <div class="lic-body">
+        <p><b>© 2026 TokKraftcorp. Все права защищены.</b></p>
+        <p>Правообладатель — TokKraftcorp. Все исключительные права на код, дизайн,
+        оформление и тексты принадлежат правообладателю.</p>
+        <p>Проприетарная лицензия: использование, копирование, изменение и распространение —
+        только с письменного разрешения правообладателя. Полный текст — в файле <span class="mono">LICENSE</span>.</p>
+        <p>Программа предоставляется «как есть», без гарантий.</p>
+      </div>
+      <div class="modal-acts"><button class="btn primary" data-modal-close>Понятно</button></div>`);
+  }
+  function termsModal(){
+    openModal(`<h3>Пользовательское соглашение</h3>
+      <div class="sub">GreenNet Crisis · «Летово Игра». Ознакомьтесь перед регистрацией.</div>
+      <div class="lic-body">
+        <p><b>1. Назначение.</b> Платформа предназначена для образовательной игры «Летово Игра» и координации работы штаба.</p>
+        <p><b>2. Открытость данных.</b> Все сообщения, задачи, отметки и действия в системе <b>видны штабу и администрации, могут быть прочитаны, сохранены и использованы</b> в рамках игры. Личной (приватной) переписки в системе нет.</p>
+        <p><b>3. Журналирование.</b> Каждое действие фиксируется в журнале событий с указанием автора и точного времени.</p>
+        <p><b>4. Учётные данные.</b> Логин, имя и роль хранятся в базе данных. Пароль хранится только в зашифрованном (хэшированном) виде и администратору не виден.</p>
+        <p><b>5. Роли.</b> При регистрации присваивается роль «наблюдатель». Изменить роль может только администратор.</p>
+        <p><b>6. Правила.</b> Запрещено передавать аккаунт другим лицам и выдавать недостоверные данные за подтверждённые.</p>
+        <p><b>7. Права на платформу.</b> Правообладатель платформы — <b>TokKraftcorp</b> (© 2026). Использование доступно только в рамках игры; права на код, дизайн и материалы платформы принадлежат правообладателю (см. «Лицензия»).</p>
+        <p style="color:var(--text-faint)">Регистрируясь, вы подтверждаете согласие с этими условиями.</p>
+      </div>
+      <div class="modal-acts"><button class="btn primary" data-modal-close>Понятно</button></div>`);
+  }
+  function animateMain(){ const m=el("main"); if(!m) return; m.classList.remove("view-in"); void m.offsetWidth; m.classList.add("view-in"); }
+
+  /* ---------------- Actions ---------------- */
+  async function refresh(){ try{ await loadState(); renderAll(); }catch(e){ handleAuthErr(e); } }
+  function handleAuthErr(e){ if(e&&e.status===401){ closeModal(); ME=null; renderLogin(); toast("Сессия завершена, войдите снова", true); return true; } toast((e&&e.error)||"Ошибка", true); return false; }
+
+  async function sendMessage(){
+    const ta=el("msgText"); if(!ta) return; const text=ta.value.trim();
+    if(!text){ toast("Введите текст сообщения", true); return; }
+    try{ await api("/api/messages","POST",{type:U.composerType, text}); U.draft=""; ta.value=""; await refresh(); toast("Сообщение отправлено · ждёт проверки"); }
+    catch(e){ handleAuthErr(e); }
+  }
+  async function verifyMsg(id, ok){
+    try{ await api("/api/messages/"+id+"/verify","POST",{ok}); await refresh(); toast(ok?"Данные подтверждены → в базе знаний":"Сообщение отклонено"); }
+    catch(e){ handleAuthErr(e); }
+  }
+  async function saveTask(){
+    const title=(el("tk-title").value||"").trim(); const err=el("tk-err"); err.textContent="";
+    if(!title){ err.textContent="Введите название задачи"; return; }
+    let due=(el("tk-due").value||"").trim(); const mt=due.match(/^(\d{1,2}):(\d{2})$/);
+    if(mt){ const d=serverNow(); const ymd=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; due=`${ymd}T${mt[1].padStart(2,"0")}:${mt[2]}:00`; } else { due=""; }
+    try{ await api("/api/tasks","POST",{title, descr:el("tk-desc").value, dept:el("tk-dept").value, assignee:el("tk-assignee").value, due}); closeModal(); await refresh(); toast("Задача создана"); }
+    catch(e){ if(e.status===401){ handleAuthErr(e); } else err.textContent=e.error||"Ошибка"; }
+  }
+  async function taskStatus(id, st){ try{ await api("/api/tasks/"+id,"PATCH",{status:st}); await refresh(); toast(st==="done"?"Задача закрыта":"Задача в работе"); } catch(e){ handleAuthErr(e); } }
+
+  async function saveUser(){
+    const err=el("u-err"); err.textContent="";
+    const body={username:el("u-username").value, first_name:el("u-first").value, last_name:el("u-last").value, password:el("u-pass").value, role:el("u-role").value, dept:el("u-dept").value};
+    try{ await api("/api/users","POST",body); closeModal(); await refresh(); toast("Пользователь создан"); }
+    catch(e){ if(e.status===401){ handleAuthErr(e); } else err.textContent=e.error||"Ошибка"; }
+  }
+  async function patchUser(id, body, okMsg){ try{ await api("/api/users/"+id,"PATCH",body); await refresh(); if(okMsg) toast(okMsg); } catch(e){ if(!handleAuthErr(e)) renderMain(); } }
+  async function savePass(uid){ const err=el("p-err"); err.textContent=""; const p=el("p-pass").value;
+    if(!p||p.length<6){ err.textContent="Минимум 6 символов"; return; }
+    try{ await api("/api/users/"+uid,"PATCH",{password:p}); closeModal(); toast("Пароль изменён"); } catch(e){ if(e.status===401){handleAuthErr(e);} else err.textContent=e.error||"Ошибка"; }
+  }
+  async function delUser(uid, name){ if(!confirm("Удалить пользователя «"+name+"»? Действие необратимо.")) return;
+    try{ await api("/api/users/"+uid,"DELETE"); await refresh(); toast("Пользователь удалён"); } catch(e){ handleAuthErr(e); }
+  }
+  async function resetAll(){ if(!confirm("Сбросить весь сценарий к исходному состоянию? Все сообщения, задачи и созданные аккаунты будут потеряны, и вы выйдете из системы.")) return;
+    try{ await api("/api/reset","POST",{}); toast("Сценарий сброшен"); ME=null; renderLogin(); } catch(e){ handleAuthErr(e); }
+  }
+  async function doLogout(){
+    // напрямую, минуя apiBusy-замок — иначе выход мог бы «не дойти» до сервера,
+    // а UI бы очистился, оставив живую сессию.
+    try{ await fetch("/api/logout",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:"{}"}); }catch(e){}
+    ME=null; S=null; SENSOR_UI.data=null; SENSOR_UI.error=null; SENSOR_UI.loading=false; stopPoll(); stopClock(); stopTimeSync(); renderLogin();
+  }
+
+  /* ---- News ---- */
+  function renderNews(){
+    const canManage = CAPS.manage;
+    const items = S.news || [];
+    const head = `<div class="view-head"><div class="htext"><h2>Новости штаба</h2>
+      <p>Официальные вводные и объявления. Публикует администрация — это «вводные от ведущих», двигающие сюжет.</p></div>
+      ${canManage?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-import-news>Импорт</button><button class="btn primary" data-new-news>${I.plus} Новость</button></div>`:""}</div>`;
+    if(!items.length){ el("main").innerHTML = head + `<div class="empty">${I.news}<div>Пока новостей нет.${canManage?" Опубликуйте первую.":""}</div></div>`; return; }
+    const cards = items.map(n=>{
+      const cv = NEWS_COLOR[n.level]||"--c-blue"; const lvl = S.news_levels[n.level]||n.level;
+      return `<div class="news-card ${esc(n.level)}" style="${cvar(cv)}">
+        <div class="nc-top"><span class="nc-lv">${n.pinned?"📌 ":""}${esc(lvl)}</span>${canManage?`<button class="btn sm danger" data-del-news="${n.id}" title="Удалить">${I.trash}</button>`:""}</div>
+        <h4>${esc(n.title)}</h4>${n.body?`<p>${esc(n.body)}</p>`:""}
+        <div class="nc-foot"><span>${esc(n.author||"")}</span><span class="time tnum">${hm(n.ts)}</span></div></div>`;
+    }).join("");
+    el("main").innerHTML = head + `<div class="news-grid">${cards}</div>`;
+  }
+
+  /* ---- Schedule ---- */
+  function renderSchedule(){
+    const canManage = CAPS.decide;
+    const items = (S.schedule||[]).slice().sort((a,b)=> toMins(a.at)-toMins(b.at));
+    const nm = minsNow();
+    let nowIdx=-1; for(let i=0;i<items.length;i++){ if(toMins(items[i].at)<=nm) nowIdx=i; }
+    const head = `<div class="view-head"><div class="htext"><h2>Расписание смены</h2>
+      <p>Единый график. Время реальное — текущий пункт подсвечивается автоматически. Ведёт штаб.</p></div>
+      ${canManage?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-import-sched>Импорт</button><button class="btn primary" data-new-sched>${I.plus} Пункт</button></div>`:""}</div>`;
+    const banner = `<div class="sched-clock">
+      <div><div class="lbl">Текущее время · МСК</div><div class="big-clock tnum js-clock">--:--:--</div></div>
+      ${nextInfo(items, nm)}</div>`;
+    if(!items.length){ el("main").innerHTML = head + banner + `<div class="empty">${I.sched}<div>Расписание пустое.${canManage?" Добавьте первый пункт или импортируйте список.":""}</div></div>`; tickClock(); return; }
+    const rows = items.map((s,i)=>{
+      const m=toMins(s.at); const state = i===nowIdx ? "now" : (m<nm ? "done" : "up");
+      const kind = S.sched_kinds[s.kind]||"";
+      const sub = [kind, s.dept, s.note].filter(Boolean).map(esc).join(" · ");
+      return `<div class="srow ${state}">
+        <div class="st tnum">${esc(s.at)}</div><div class="sdot"><i></i></div>
+        <div class="sc"><b>${esc(s.title)}${state==="now"?' <span class="now-pill">СЕЙЧАС</span>':''}</b>${sub?`<small>${sub}</small>`:""}</div>
+        ${canManage?`<div class="sacts"><button class="btn sm ghost" data-edit-sched="${s.id}" title="Изменить">✎</button><button class="btn sm danger" data-del-sched="${s.id}" title="Удалить">${I.trash}</button></div>`:""}</div>`;
+    }).join("");
+    el("main").innerHTML = head + banner + `<div class="sched-list">${rows}</div>`;
+    tickClock();
+  }
+  function nextInfo(items, nm){
+    const up = items.filter(s=> toMins(s.at) > nm).sort((a,b)=>toMins(a.at)-toMins(b.at))[0];
+    if(!up) return `<div class="next-ev"><div class="lbl">Дальше</div><div style="color:var(--text-faint);font-size:13px">событий больше нет</div></div>`;
+    const diff = toMins(up.at)-nm; const hh=Math.floor(diff/60), mm=diff%60;
+    return `<div class="next-ev"><div class="lbl">Следующее · через ${hh?hh+" ч ":""}${mm} мин</div><div class="ne-t"><b>${esc(up.at)}</b> ${esc(up.title)}</div></div>`;
+  }
+  function sideAir(){
+    const nm=minsNow();
+    const up=(S.schedule||[]).filter(s=>toMins(s.at)>nm).sort((a,b)=>toMins(a.at)-toMins(b.at))[0];
+    const news=(S.news||[])[0];
+    let out = up
+      ? `<div class="air-row"><div class="air-k">Следующее событие</div><div class="air-v"><b class="mono">${esc(up.at)}</b> ${esc(up.title)}</div></div>`
+      : `<div class="air-row"><div class="air-k">События</div><div class="air-v" style="color:var(--text-faint)">не запланированы</div></div>`;
+    if(news) out += `<div class="air-row"><div class="air-k">Последняя новость</div><div class="air-v">${news.level==="critical"?'<span style="color:var(--c-red)">● </span>':""}${esc(news.title)}</div></div>`;
+    return out;
+  }
+
+  /* ---- News / schedule modals ---- */
+  function newsModal(){
+    openModal(`<h3>Новая новость</h3><div class="sub">Официальная вводная от штаба — появится у всех участников.</div>
+      <div class="field"><label>Заголовок</label><input id="n-title" placeholder="Напр.: обнаружен третий очаг" autofocus></div>
+      <div class="field"><label>Текст (необязательно)</label><textarea id="n-body" rows="3" placeholder="Подробности вводной"></textarea></div>
+      <div class="two-col">
+        <div class="field"><label>Уровень</label><select id="n-level">${Object.keys(S.news_levels).map(k=>`<option value="${k}" ${k==="info"?"selected":""}>${esc(S.news_levels[k])}</option>`).join("")}</select></div>
+        <div class="field"><label>Закрепить</label><select id="n-pin"><option value="0">Нет</option><option value="1">Да, вверху</option></select></div>
+      </div>
+      <div class="form-err" id="n-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-news-save>${I.check} Опубликовать</button></div>`);
+  }
+  function schedModal(s){
+    s=s||{};
+    openModal(`<h3>${s.id?"Изменить пункт":"Новый пункт расписания"}</h3><div class="sub">Время реальное (ЧЧ:ММ). Пункт подсветится как «сейчас», когда наступит его время.</div>
+      <div class="two-col">
+        <div class="field"><label>Время (ЧЧ:ММ)</label><input id="s-at" value="${esc(s.at||"")}" placeholder="18:00"></div>
+        <div class="field"><label>Тип</label><select id="s-kind">${Object.keys(S.sched_kinds).map(k=>`<option value="${k}" ${k===(s.kind||"event")?"selected":""}>${esc(S.sched_kinds[k])}</option>`).join("")}</select></div>
+      </div>
+      <div class="field"><label>Название</label><input id="s-title" value="${esc(s.title||"")}" placeholder="Брифинг штаба"></div>
+      <div class="two-col">
+        <div class="field"><label>Департамент</label><select id="s-dept"><option value="">—</option>${S.depts.map(d=>`<option ${d===s.dept?"selected":""}>${esc(d)}</option>`).join("")}</select></div>
+        <div class="field"><label>Примечание</label><input id="s-note" value="${esc(s.note||"")}" placeholder="кратко"></div>
+      </div>
+      <div class="form-err" id="s-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-sched-save="${s.id||""}">${I.check} Сохранить</button></div>`);
+  }
+  function importModal(kind){
+    const isNews = kind==="news";
+    const ph = isNews
+      ? "Одна новость на строку (заголовок).\nИли JSON: [{\"title\":\"...\",\"body\":\"...\",\"level\":\"critical\"}]"
+      : "Один пункт на строку:\n18:00 Брифинг штаба\n20:00 Итоги дня | Штаб\nИли JSON: [{\"at\":\"18:00\",\"title\":\"...\",\"kind\":\"briefing\",\"dept\":\"Штаб\"}]";
+    openModal(`<h3>Импорт ${isNews?"новостей":"расписания"}</h3><div class="sub">Вставьте список — по строке на пункт, либо массив JSON. Дубликаты не проверяются.</div>
+      <div class="field"><label>Данные</label><textarea id="imp-text" rows="8" placeholder="${esc(ph)}"></textarea></div>
+      <div class="form-err" id="imp-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-import-save="${kind}">Импортировать</button></div>`);
+  }
+  function parseImport(kind, text){
+    text=(text||"").trim(); if(!text) return [];
+    if(text[0]==="["){ let a; try{ a=JSON.parse(text); }catch(e){ throw {error:"Неверный JSON"}; } return Array.isArray(a)?a:[]; }
+    const lines=text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+    if(kind==="news") return lines.map(l=>({title:l}));
+    return lines.map(l=>{ const m=l.match(/^(\d{1,2}:\d{2})[\s|,–\-]+(.+)$/); if(!m) return null;
+      const parts=m[2].split("|").map(x=>x.trim()); return {at:m[1], title:parts[0], dept:parts[1]||"", kind:parts[2]||"event"}; }).filter(Boolean);
+  }
+
+  /* ---- News / schedule actions ---- */
+  async function saveNews(){ const err=el("n-err"); if(err) err.textContent="";
+    const body={title:el("n-title").value, body:el("n-body").value, level:el("n-level").value, pinned:el("n-pin").value==="1"};
+    try{ await api("/api/news","POST",body); closeModal(); await refresh(); toast("Новость опубликована"); }
+    catch(e){ if(e.status===401){handleAuthErr(e);} else if(err) err.textContent=e.error||"Ошибка"; } }
+  async function delNews(id){ if(!confirm("Удалить новость?")) return;
+    try{ await api("/api/news/"+id,"DELETE"); await refresh(); toast("Новость удалена"); }catch(e){ handleAuthErr(e); } }
+  async function saveSched(id){ const err=el("s-err"); if(err) err.textContent="";
+    const body={at:el("s-at").value, title:el("s-title").value, kind:el("s-kind").value, dept:el("s-dept").value, note:el("s-note").value};
+    try{ if(id){ await api("/api/schedule/"+id,"PATCH",body); } else { await api("/api/schedule","POST",body); }
+      closeModal(); await refresh(); toast("Расписание обновлено"); }
+    catch(e){ if(e.status===401){handleAuthErr(e);} else if(err) err.textContent=e.error||"Ошибка"; } }
+  async function delSched(id){ if(!confirm("Удалить пункт расписания?")) return;
+    try{ await api("/api/schedule/"+id,"DELETE"); await refresh(); toast("Пункт удалён"); }catch(e){ handleAuthErr(e); } }
+  async function doImport(kind){ const err=el("imp-err"); if(err) err.textContent="";
+    let items; try{ items=parseImport(kind, el("imp-text").value); }catch(ex){ if(err) err.textContent=ex.error||"Ошибка разбора"; return; }
+    if(!items.length){ if(err) err.textContent="Не удалось распознать ни одной строки"; return; }
+    const path = kind==="news" ? "/api/news/import" : "/api/schedule/import";
+    try{ const r=await api(path,"POST",{items}); closeModal(); await refresh(); toast("Импортировано: "+(r.imported||0)); }
+    catch(e){ if(e.status===401){handleAuthErr(e);} else if(err) err.textContent=e.error||"Ошибка"; } }
+
+  /* ---------------- Render orchestration ---------------- */
+  function renderAll(){ if(!S) return; renderRail(); renderTop(); renderMain(); renderSide(); }
+
+  function tickClock(){
+    const d=serverNow();
+    const t=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,"0")).join(":");
+    document.querySelectorAll(".js-clock").forEach(c=>{ c.innerHTML = t + (c.dataset.zone ? '<span class="zone">'+c.dataset.zone+'</span>' : ''); });
+  }
+  function startClock(){ if(clockTimer) return; tickClock(); clockTimer=setInterval(tickClock,1000); }
+  function stopClock(){ if(clockTimer){ clearInterval(clockTimer); clockTimer=null; } }
+  function startPoll(){ if(pollTimer) return; pollTimer=setInterval(async ()=>{
+      if(el("modal-root").innerHTML) return;             // не мешаем при открытом окне
+      if(U.view==="sensors" && !SENSOR_UI.loading && Date.now()-SENSOR_UI.loadedAt>60000) loadSensors(false);
+      const ae=document.activeElement;
+      const typing = ae && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
+      const formView = (U.view==="finance" || U.view==="admin");  // формо-ёмкие разделы не трогаем
+      const dirty = [...document.querySelectorAll('#main input, #main textarea')].some(x=>x.value && String(x.value).trim()!=="");
+      try{
+        const oldVer = S && S.version;
+        const fresh=await api("/api/state"); S=fresh; ME=S.me; CAPS=S.caps;
+        if(fresh.version === oldVer) return;               // данные не изменились — ничего не перерисовываем (сохраняем прокрутку/выделение)
+        renderRail(); renderSide();
+        if(!typing && !dirty && !formView) renderMain();   // основную область не пересобираем, пока заполняют форму
+      }catch(e){ if(e&&e.status===401){ stopPoll(); ME=null; renderLogin(); } }
+    }, 5000); }
+  function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
+
+  /* ---------------- Event delegation ---------------- */
+  document.addEventListener("click", (e)=>{
+    const t=e.target.closest("[data-view],[data-filter],[data-ctype],[data-send-msg],[data-verify],[data-reject],[data-msg-task],[data-new-task],[data-task-start],[data-task-done],[data-task-save],[data-modal-close],[data-modal-bg],[data-mapobj],[data-toggle-theme],[data-logout],[data-new-user],[data-user-save],[data-urole],[data-udept],[data-upass],[data-utoggle],[data-udel],[data-pass-save],[data-reset-all],[data-new-news],[data-news-save],[data-del-news],[data-import-news],[data-new-sched],[data-sched-save],[data-del-sched],[data-edit-sched],[data-import-sched],[data-import-save],[data-show-license],[data-auth-tab],[data-show-terms],[data-dept-sel],[data-chan-send],[data-fin-send],[data-del-msg],[data-del-chan],[data-portal-open],[data-portal-go],[data-new-group],[data-group-save],[data-group-sel],[data-group-send],[data-del-group],[data-del-group-msg],[data-sensor-refresh],[data-sensor-type],[data-sensor-id]");
+    if(!t) return;
+    if(t.hasAttribute("data-view")){ U.view=t.getAttribute("data-view"); saveUI(); renderRail(); renderMain(); animateMain(); return; }
+    if(t.hasAttribute("data-show-license")){ licenseModal(); return; }
+    if(t.hasAttribute("data-auth-tab")){ authTab=t.getAttribute("data-auth-tab"); renderLogin(); return; }
+    if(t.hasAttribute("data-show-terms")){ e.preventDefault(); termsModal(); return; }
+    if(t.hasAttribute("data-portal-open")){ const b=el("portal-box"); if(b){ b.style.display="flex"; const ta=el("pt-token"); if(ta) ta.focus(); } return; }
+    if(t.hasAttribute("data-portal-go")){ const ta=el("pt-token"); portalLogin(ta?ta.value:""); return; }
+    if(t.hasAttribute("data-dept-sel")){ U.deptSel=t.getAttribute("data-dept-sel"); U.chanDraft=""; saveUI(); renderMain(); return; }
+    if(t.hasAttribute("data-chan-send")){ sendChannel(t.getAttribute("data-chan-send")); return; }
+    if(t.hasAttribute("data-new-group")){ groupModal(); return; }
+    if(t.hasAttribute("data-group-save")){ saveGroup(); return; }
+    if(t.hasAttribute("data-group-sel")){ U.groupSel=Number(t.getAttribute("data-group-sel")); U.groupDraft=""; saveUI(); renderMain(); return; }
+    if(t.hasAttribute("data-group-send")){ sendGroup(Number(t.getAttribute("data-group-send"))); return; }
+    if(t.hasAttribute("data-del-group")){ deleteGroup(Number(t.getAttribute("data-del-group"))); return; }
+    if(t.hasAttribute("data-del-group-msg")){ const [gid,mid]=t.getAttribute("data-del-group-msg").split("|").map(Number); deleteGroupMessage(gid,mid); return; }
+    if(t.hasAttribute("data-sensor-refresh")){ loadSensors(true); return; }
+    if(t.hasAttribute("data-sensor-type")){ U.sensorType=t.getAttribute("data-sensor-type"); saveUI(); renderSensors(); return; }
+    if(t.hasAttribute("data-sensor-id")){ U.sensorSelected=t.getAttribute("data-sensor-id"); saveUI(); renderSensors(); return; }
+    if(t.hasAttribute("data-fin-send")){ financeSend(); return; }
+    if(t.hasAttribute("data-del-msg")){ if(confirm("Удалить сообщение из ленты? (модерация)")){ (async()=>{ try{ await api("/api/messages/"+t.getAttribute("data-del-msg"),"DELETE"); await refresh(); toast("Сообщение удалено"); }catch(e){ handleAuthErr(e); } })(); } return; }
+    if(t.hasAttribute("data-del-chan")){ if(confirm("Удалить сообщение из чата? (модерация)")){ (async()=>{ try{ await api("/api/channels/"+t.getAttribute("data-del-chan"),"DELETE"); await refresh(); toast("Сообщение удалено"); }catch(e){ handleAuthErr(e); } })(); } return; }
+    if(t.hasAttribute("data-filter")){ U.filter=t.getAttribute("data-filter"); saveUI(); renderMain(); return; }
+    if(t.hasAttribute("data-ctype")){ U.composerType=t.getAttribute("data-ctype"); saveUI(); renderMain(); return; }
+    if(t.hasAttribute("data-send-msg")){ sendMessage(); return; }
+    if(t.hasAttribute("data-verify")){ verifyMsg(t.getAttribute("data-verify"), true); return; }
+    if(t.hasAttribute("data-reject")){ verifyMsg(t.getAttribute("data-reject"), false); return; }
+    if(t.hasAttribute("data-msg-task")){ const m=S.messages.find(x=>String(x.id)===t.getAttribute("data-msg-task")); taskModal({title:m?m.text.slice(0,50):"", desc:m?("Из сообщения ("+((S.msg_types[m.type]||{}).label||"")+"): "+m.text):"", dept:m?m.dept:""}); return; }
+    if(t.hasAttribute("data-new-task")){ taskModal(); return; }
+    if(t.hasAttribute("data-task-start")){ taskStatus(t.getAttribute("data-task-start"),"prog"); return; }
+    if(t.hasAttribute("data-task-done")){ taskStatus(t.getAttribute("data-task-done"),"done"); return; }
+    if(t.hasAttribute("data-task-save")){ saveTask(); return; }
+    if(t.hasAttribute("data-modal-close")){ closeModal(); return; }
+    if(t.hasAttribute("data-modal-bg") && e.target===t){ closeModal(); return; }
+    if(t.hasAttribute("data-mapobj")){ const o=S.map_objects.find(x=>String(x.id)===t.getAttribute("data-mapobj")); if(o) toast(o.label+(o.sev?(" · опасность: "+({high:"высокая",medium:"средняя",low:"низкая"}[o.sev])):"")); return; }
+    if(t.hasAttribute("data-toggle-theme")){ cycleTheme(); return; }
+    if(t.hasAttribute("data-logout")){ doLogout(); return; }
+    if(t.hasAttribute("data-new-user")){ userModal(); return; }
+    if(t.hasAttribute("data-user-save")){ saveUser(); return; }
+    if(t.hasAttribute("data-upass")){ passModal(t.getAttribute("data-upass")); return; }
+    if(t.hasAttribute("data-utoggle")){ const [id,act]=t.getAttribute("data-utoggle").split("|"); patchUser(id,{active:act==="1"}, act==="1"?"Доступ включён":"Доступ отключён"); return; }
+    if(t.hasAttribute("data-udel")){ const id=t.getAttribute("data-udel"); const uu=(S.roster||[]).find(x=>String(x.id)===id); delUser(id, uu?uu.name:""); return; }
+    if(t.hasAttribute("data-pass-save")){ savePass(t.getAttribute("data-pass-save")); return; }
+    if(t.hasAttribute("data-reset-all")){ resetAll(); return; }
+    if(t.hasAttribute("data-new-news")){ newsModal(); return; }
+    if(t.hasAttribute("data-news-save")){ saveNews(); return; }
+    if(t.hasAttribute("data-del-news")){ delNews(t.getAttribute("data-del-news")); return; }
+    if(t.hasAttribute("data-import-news")){ importModal("news"); return; }
+    if(t.hasAttribute("data-new-sched")){ schedModal(); return; }
+    if(t.hasAttribute("data-sched-save")){ saveSched(t.getAttribute("data-sched-save")); return; }
+    if(t.hasAttribute("data-del-sched")){ delSched(t.getAttribute("data-del-sched")); return; }
+    if(t.hasAttribute("data-edit-sched")){ const s=(S.schedule||[]).find(x=>String(x.id)===t.getAttribute("data-edit-sched")); if(s) schedModal(s); return; }
+    if(t.hasAttribute("data-import-sched")){ importModal("sched"); return; }
+    if(t.hasAttribute("data-import-save")){ doImport(t.getAttribute("data-import-save")); return; }
+  });
+  document.addEventListener("change", (e)=>{
+    const el2=e.target;
+    if(el2.hasAttribute && el2.hasAttribute("data-urole")){ patchUser(el2.getAttribute("data-urole"),{role:el2.value},"Роль обновлена"); return; }
+    if(el2.hasAttribute && el2.hasAttribute("data-udept")){ patchUser(el2.getAttribute("data-udept"),{dept:el2.value},"Департамент обновлён"); return; }
+  });
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape") closeModal();
+    if(e.key==="Enter" && (e.ctrlKey||e.metaKey) && e.target && e.target.id==="groupText"){
+      const b=document.querySelector("[data-group-send]"); if(b){ e.preventDefault(); sendGroup(Number(b.getAttribute("data-group-send"))); }
+    }
+  });
+
+  document.addEventListener("change",(e)=>{
+    if(e.target && e.target.id==="sensor-param"){
+      U.sensorParam=e.target.value; saveUI(); renderSensors();
+    }
+  });
+
+  document.addEventListener("input",(e)=>{
+    if(!e.target || e.target.id!=="sensor-search") return;
+    const pos=e.target.selectionStart, value=e.target.value;
+    U.sensorSearch=value; saveUI(); renderSensors();
+    const next=el("sensor-search");
+    if(next){ next.focus(); const p=Math.min(pos==null?value.length:pos,value.length); next.setSelectionRange(p,p); }
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>
