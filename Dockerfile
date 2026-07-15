@@ -15,7 +15,6 @@ COPY static/ ./static/
 ENV GREENNET_DATA=/data \
     PORT=5000 \
     PYTHONUNBUFFERED=1
-VOLUME ["/data"]
 EXPOSE 5000
 
 # Продакшн-сервер: 1 процесс + 16 потоков (безопасно для SQLite в WAL-режиме).
