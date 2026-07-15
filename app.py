@@ -151,6 +151,7 @@ ROLES = {
     "observer":   {"label": "Волонтёр / наблюдатель", "short": "ВН", "rank": 1},
 }
 ROLE_ORDER = ["admin", "hq_head", "dept_head", "senior", "specialist", "observer"]
+CHAT_MEMBER_MANAGER_ROLES = {"admin", "hq_head", "dept_head", "senior"}
 
 # Права (capabilities) на каждую роль. Проверяются на сервере при каждом действии.
 #   post:        all | basic | none        — какие типы сообщений можно отправлять
@@ -1593,6 +1594,7 @@ def api_state():
             "id": group["id"], "name": group["name"], "description": group["description"] or "",
             "created_by": group["created_by"], "creator": group["creator_name"] or "Удалённый пользователь",
             "ts": group["created_at"],
+            "can_manage_members": _chat_group_can_manage(group, u),
             "members": [{"id": m["id"], "name": m["name"], "role": m["role"],
                          "short": ROLES.get(m["role"], {}).get("short", "?"),
                          "muted": bool(m["muted"])} for m in members],
@@ -1810,7 +1812,9 @@ def _chat_group_for_member(db, gid, uid):
 
 
 def _chat_group_can_manage(group, user):
-    return bool(group and (group["created_by"] == user["id"] or user["role"] == "admin"))
+    return bool(group and (
+        group["created_by"] == user["id"] or user["role"] in CHAT_MEMBER_MANAGER_ROLES
+    ))
 
 
 @app.post("/api/chat/groups")
@@ -1888,7 +1892,7 @@ def api_add_chat_group_members(gid):
     if not group:
         return jsonify(error="Группа не найдена"), 404
     if not _chat_group_can_manage(group, u):
-        return jsonify(error="Изменять состав может только главный группы или администратор"), 403
+        return jsonify(error="Изменять состав может создатель группы или участник со старшей ролью"), 403
     raw_ids = _body().get("member_ids")
     if not isinstance(raw_ids, list) or not raw_ids or len(raw_ids) > 200:
         return jsonify(error="Выберите участников для добавления"), 400
@@ -1926,7 +1930,7 @@ def api_mute_chat_group_member(gid, uid):
     if not group:
         return jsonify(error="Группа не найдена"), 404
     if not _chat_group_can_manage(group, u):
-        return jsonify(error="Mute доступен только главному группы или администратору"), 403
+        return jsonify(error="Mute доступен создателю группы и участникам со старшей ролью"), 403
     data = _body()
     if not isinstance(data.get("muted"), bool):
         return jsonify(error="Передайте состояние muted: true или false"), 400
@@ -1954,7 +1958,7 @@ def api_remove_chat_group_member(gid, uid):
     if not group:
         return jsonify(error="Группа не найдена"), 404
     if not _chat_group_can_manage(group, u):
-        return jsonify(error="Удалять участников может только главный группы или администратор"), 403
+        return jsonify(error="Удалять участников может создатель группы или участник со старшей ролью"), 403
     member = db.execute(
         "SELECT u.id,u.name,u.active FROM users u JOIN chat_group_members m ON m.user_id=u.id "
         "WHERE m.group_id=? AND m.user_id=?", (gid, uid)).fetchone()

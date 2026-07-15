@@ -96,7 +96,13 @@ with tempfile.TemporaryDirectory() as data_dir:
     assert member_one.post(f"/api/chat/groups/{group_id}/members", json={
         "member_ids": [member_three_id],
     }).status_code == 403
-    added = creator.post(f"/api/chat/groups/{group_id}/members", json={
+    assert admin.patch(f"/api/users/{member_one_id}", json={"role": "senior"}).status_code == 200
+    assert admin.patch(f"/api/users/{member_two_id}", json={"role": "hq_head"}).status_code == 200
+    assert member_one.get("/api/state").get_json()["chat_groups"][0]["can_manage_members"] is True
+    assert member_two.get("/api/state").get_json()["chat_groups"][0]["can_manage_members"] is True
+    assert creator.get("/api/state").get_json()["chat_groups"][0]["can_manage_members"] is True
+
+    added = member_one.post(f"/api/chat/groups/{group_id}/members", json={
         "member_ids": [member_three_id],
     })
     assert added.status_code == 200, added.get_json()
@@ -104,24 +110,25 @@ with tempfile.TemporaryDirectory() as data_dir:
     assert len(group["members"]) == 4
     assert all("muted" in member for member in group["members"])
 
-    muted = creator.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+    assert member_three.get("/api/state").get_json()["chat_groups"][0]["can_manage_members"] is False
+    muted = member_two.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
         "muted": True,
     })
     assert muted.status_code == 200, muted.get_json()
     assert member_one.post(f"/api/chat/groups/{group_id}/messages", json={
         "text": "Это сообщение должно быть заблокировано",
     }).status_code == 403
-    assert member_two.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+    assert member_three.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
         "muted": False,
     }).status_code == 403
-    assert creator.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+    assert member_two.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
         "muted": False,
     }).status_code == 200
     assert member_one.post(f"/api/chat/groups/{group_id}/messages", json={
         "text": "После снятия mute отправка снова работает",
     }).status_code == 200
 
-    assert creator.delete(f"/api/chat/groups/{group_id}/members/{member_three_id}").status_code == 200
+    assert member_one.delete(f"/api/chat/groups/{group_id}/members/{member_three_id}").status_code == 200
     assert member_three.get("/api/state").get_json()["chat_groups"] == []
     assert member_three.post(f"/api/chat/groups/{group_id}/messages", json={
         "text": "Удалённый участник не может писать",
