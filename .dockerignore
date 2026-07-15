@@ -1,0 +1,17 @@
+greennet.db
+secret_key.txt
+admin_password.txt
+demo_password.txt
+users.csv
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+data/
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.log

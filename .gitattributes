@@ -1,0 +1,4 @@
+# Нормализация окончаний строк
+* text=auto eol=lf
+# Windows-батники должны оставаться CRLF
+*.bat text eol=crlf

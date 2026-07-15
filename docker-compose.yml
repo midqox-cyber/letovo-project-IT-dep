@@ -1,0 +1,25 @@
+# GreenNet Crisis — запуск одной командой:  docker compose up
+services:
+  greennet:
+    build: .
+    container_name: greennet-crisis
+    ports:
+      - "5000:5000"          # http://localhost:5000
+    environment:
+      - GREENNET_DATA=/data
+      # Пароль администратора (иначе сгенерируется и попадёт в логи/admin_password.txt):
+      # - GREENNET_ADMIN_PASSWORD=смените-меня
+      # Показной демо-сценарий «Зелёный прилив» с игровыми аккаунтами:
+      # - GREENNET_DEMO=1
+      # Пароль демо-профилей; если не задан, будет сгенерирован в /data/demo_password.txt:
+      # - GREENNET_DEMO_PASSWORD=задайте-локально
+      # Отключить самостоятельную регистрацию участников (заводит только админ):
+      # - GREENNET_REGISTRATION=0
+      # Включить флаг Secure для куки, если сервис за HTTPS:
+      # - GREENNET_HTTPS=1
+    volumes:
+      - greennet-data:/data  # база и ключ сессий сохраняются между перезапусками
+    restart: unless-stopped
+
+volumes:
+  greennet-data:
