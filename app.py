@@ -516,6 +516,21 @@ def init_db():
     have_users = db.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
     if not have_users:
         seed(db)
+    elif os.environ.get("GREENNET_ADMIN_PASSWORD"):
+        # In hosted deployments the secret manager is the source of truth.
+        # Keep the persisted admin hash in sync so rotating the environment
+        # variable does not require deleting the database or its user data.
+        admin = db.execute(
+            "SELECT id,password_hash FROM users WHERE username=? AND role='admin'",
+            (ADMIN_USER,),
+        ).fetchone()
+        configured_password = os.environ["GREENNET_ADMIN_PASSWORD"]
+        if admin and not check_password_hash(admin["password_hash"], configured_password):
+            db.execute(
+                "UPDATE users SET password_hash=? WHERE id=?",
+                (generate_password_hash(configured_password), admin["id"]),
+            )
+            _commit(db)
     sync_users_csv(db)
     db.close()
 

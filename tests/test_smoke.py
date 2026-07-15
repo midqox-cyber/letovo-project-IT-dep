@@ -32,6 +32,16 @@ with tempfile.TemporaryDirectory() as data_dir:
         "username": "admin", "password": admin_password,
     }).status_code == 200
 
+    rotated_admin_password = secrets.token_urlsafe(18)
+    os.environ["GREENNET_ADMIN_PASSWORD"] = rotated_admin_password
+    module.init_db()
+    assert module.app.test_client().post("/api/login", json={
+        "username": "admin", "password": admin_password,
+    }).status_code == 401
+    assert module.app.test_client().post("/api/login", json={
+        "username": "admin", "password": rotated_admin_password,
+    }).status_code == 200
+
     users = (
         (creator, "creator", "Ирина", "Орлова"),
         (member_one, "member-one", "Анна", "Петрова"),
