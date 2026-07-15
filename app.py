@@ -346,6 +346,7 @@ CREATE TABLE IF NOT EXISTS chat_group_members (
     group_id  INTEGER NOT NULL REFERENCES chat_groups(id) ON DELETE CASCADE,
     user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     joined_at TEXT NOT NULL,
+    muted     INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (group_id, user_id)
 );
 CREATE TABLE IF NOT EXISTS chat_group_messages (
@@ -505,6 +506,10 @@ def init_db():
             db.execute(f"ALTER TABLE users ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
         except sqlite3.OperationalError:
             pass
+    try:
+        db.execute("ALTER TABLE chat_group_members ADD COLUMN muted INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
     # Перенос данных из старого поля name в раздельные имя/фамилию.
     for row in db.execute("SELECT id,name,first_name,last_name FROM users").fetchall():
         if not row["first_name"] and not row["last_name"]:
@@ -1582,14 +1587,15 @@ def api_state():
     chat_groups = []
     for group in group_rows:
         members = db.execute(
-            "SELECT u.id,u.name,u.role FROM users u JOIN chat_group_members m ON m.user_id=u.id "
+            "SELECT u.id,u.name,u.role,m.muted FROM users u JOIN chat_group_members m ON m.user_id=u.id "
             "WHERE m.group_id=? AND u.active=1 ORDER BY u.name", (group["id"],)).fetchall()
         chat_groups.append({
             "id": group["id"], "name": group["name"], "description": group["description"] or "",
             "created_by": group["created_by"], "creator": group["creator_name"] or "Удалённый пользователь",
             "ts": group["created_at"],
             "members": [{"id": m["id"], "name": m["name"], "role": m["role"],
-                         "short": ROLES.get(m["role"], {}).get("short", "?")} for m in members],
+                         "short": ROLES.get(m["role"], {}).get("short", "?"),
+                         "muted": bool(m["muted"])} for m in members],
         })
     group_messages = [group_message_public(r) for r in db.execute(
         "SELECT * FROM (SELECT msg.* FROM chat_group_messages msg "
@@ -1799,8 +1805,12 @@ def api_delete_channel(cid):
 # ---------------------------------------------------------------------------
 def _chat_group_for_member(db, gid, uid):
     return db.execute(
-        "SELECT g.* FROM chat_groups g JOIN chat_group_members m ON m.group_id=g.id "
+        "SELECT g.*,m.muted member_muted FROM chat_groups g JOIN chat_group_members m ON m.group_id=g.id "
         "WHERE g.id=? AND m.user_id=?", (gid, uid)).fetchone()
+
+
+def _chat_group_can_manage(group, user):
+    return bool(group and (group["created_by"] == user["id"] or user["role"] == "admin"))
 
 
 @app.post("/api/chat/groups")
@@ -1827,9 +1837,10 @@ def api_create_chat_group():
     member_ids.add(u["id"])
     if len(member_ids) < 3:
         return jsonify(error="В групповой комнате должно быть минимум 3 участника"), 400
-    marks = ",".join("?" for _ in member_ids)
+    member_params = tuple(sorted(member_ids))
+    marks = ",".join("?" for _ in member_params)
     active_ids = {r["id"] for r in db.execute(
-        f"SELECT id FROM users WHERE active=1 AND id IN ({marks})", tuple(member_ids)).fetchall()}
+        f"SELECT id FROM users WHERE active=1 AND id IN ({marks})", member_params).fetchall()}
     if active_ids != member_ids:
         return jsonify(error="Один из выбранных участников недоступен"), 400
     cur = db.execute(
@@ -1853,6 +1864,8 @@ def api_post_group_message(gid):
     group = _chat_group_for_member(db, gid, u["id"])
     if not group:
         return jsonify(error="Группа не найдена или вы не являетесь участником"), 404
+    if group["member_muted"]:
+        return jsonify(error="Главный группы временно ограничил вам отправку сообщений"), 403
     text = str(_body().get("text") or "").strip()
     if not text:
         return jsonify(error="Пустое сообщение"), 400
@@ -1864,6 +1877,100 @@ def api_post_group_message(gid):
         (gid, u["id"], u["name"], text, now_iso()))
     _commit(db)
     return jsonify(id=cur.lastrowid, ok=True)
+
+
+@app.post("/api/chat/groups/<int:gid>/members")
+@login_required
+def api_add_chat_group_members(gid):
+    u = current_user()
+    db = get_db()
+    group = _chat_group_for_member(db, gid, u["id"])
+    if not group:
+        return jsonify(error="Группа не найдена"), 404
+    if not _chat_group_can_manage(group, u):
+        return jsonify(error="Изменять состав может только главный группы или администратор"), 403
+    raw_ids = _body().get("member_ids")
+    if not isinstance(raw_ids, list) or not raw_ids or len(raw_ids) > 200:
+        return jsonify(error="Выберите участников для добавления"), 400
+    try:
+        member_ids = {int(x) for x in raw_ids}
+    except (TypeError, ValueError, OverflowError):
+        return jsonify(error="Некорректный список участников"), 400
+    member_params = tuple(sorted(member_ids))
+    marks = ",".join("?" for _ in member_params)
+    active_ids = {r["id"] for r in db.execute(
+        f"SELECT id FROM users WHERE active=1 AND id IN ({marks})", member_params).fetchall()}
+    if active_ids != member_ids:
+        return jsonify(error="Один из выбранных участников недоступен"), 400
+    existing_ids = {r["user_id"] for r in db.execute(
+        f"SELECT user_id FROM chat_group_members WHERE group_id=? AND user_id IN ({marks})",
+        (gid, *member_params)).fetchall()}
+    new_ids = sorted(member_ids - existing_ids)
+    if not new_ids:
+        return jsonify(error="Все выбранные пользователи уже состоят в группе"), 409
+    joined_at = now_iso()
+    db.executemany(
+        "INSERT INTO chat_group_members(group_id,user_id,joined_at,muted) VALUES(?,?,?,0)",
+        [(gid, uid, joined_at) for uid in new_ids])
+    add_log(db, u["name"], f"добавил(а) {len(new_ids)} участника(ов) в чат <b>{h(group['name'])}</b>")
+    _commit(db)
+    return jsonify(ok=True, added=len(new_ids))
+
+
+@app.patch("/api/chat/groups/<int:gid>/members/<int:uid>")
+@login_required
+def api_mute_chat_group_member(gid, uid):
+    u = current_user()
+    db = get_db()
+    group = _chat_group_for_member(db, gid, u["id"])
+    if not group:
+        return jsonify(error="Группа не найдена"), 404
+    if not _chat_group_can_manage(group, u):
+        return jsonify(error="Mute доступен только главному группы или администратору"), 403
+    data = _body()
+    if not isinstance(data.get("muted"), bool):
+        return jsonify(error="Передайте состояние muted: true или false"), 400
+    member = db.execute(
+        "SELECT u.id,u.name,m.muted FROM users u JOIN chat_group_members m ON m.user_id=u.id "
+        "WHERE m.group_id=? AND m.user_id=?", (gid, uid)).fetchone()
+    if not member:
+        return jsonify(error="Участник не найден в этой группе"), 404
+    if uid == group["created_by"] or uid == u["id"]:
+        return jsonify(error="Главного группы нельзя заглушить"), 400
+    muted = 1 if data["muted"] else 0
+    db.execute("UPDATE chat_group_members SET muted=? WHERE group_id=? AND user_id=?", (muted, gid, uid))
+    action = "включил(а) mute для" if muted else "снял(а) mute с"
+    add_log(db, u["name"], f"{action} <b>{h(member['name'])}</b> в чате <b>{h(group['name'])}</b>")
+    _commit(db)
+    return jsonify(ok=True, muted=bool(muted))
+
+
+@app.delete("/api/chat/groups/<int:gid>/members/<int:uid>")
+@login_required
+def api_remove_chat_group_member(gid, uid):
+    u = current_user()
+    db = get_db()
+    group = _chat_group_for_member(db, gid, u["id"])
+    if not group:
+        return jsonify(error="Группа не найдена"), 404
+    if not _chat_group_can_manage(group, u):
+        return jsonify(error="Удалять участников может только главный группы или администратор"), 403
+    member = db.execute(
+        "SELECT u.id,u.name,u.active FROM users u JOIN chat_group_members m ON m.user_id=u.id "
+        "WHERE m.group_id=? AND m.user_id=?", (gid, uid)).fetchone()
+    if not member:
+        return jsonify(error="Участник не найден в этой группе"), 404
+    if uid == group["created_by"]:
+        return jsonify(error="Нельзя удалить главного группы"), 400
+    active_member_count = db.execute(
+        "SELECT COUNT(*) c FROM chat_group_members m JOIN users u ON u.id=m.user_id "
+        "WHERE m.group_id=? AND u.active=1", (gid,)).fetchone()["c"]
+    if member["active"] and active_member_count <= 3:
+        return jsonify(error="В групповом чате должно остаться минимум 3 участника"), 400
+    db.execute("DELETE FROM chat_group_members WHERE group_id=? AND user_id=?", (gid, uid))
+    add_log(db, u["name"], f"удалил(а) <b>{h(member['name'])}</b> из чата <b>{h(group['name'])}</b>")
+    _commit(db)
+    return jsonify(ok=True)
 
 
 @app.delete("/api/chat/groups/<int:gid>/messages/<int:mid>")

@@ -1,8 +1,10 @@
 import csv
+from contextlib import closing
 import importlib.util
 import os
 from pathlib import Path
 import secrets
+import sqlite3
 import tempfile
 
 
@@ -10,6 +12,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 with tempfile.TemporaryDirectory() as data_dir:
+    legacy_db = sqlite3.connect(Path(data_dir) / "greennet.db")
+    legacy_db.execute(
+        "CREATE TABLE chat_group_members ("
+        "group_id INTEGER NOT NULL, user_id INTEGER NOT NULL, joined_at TEXT NOT NULL, "
+        "PRIMARY KEY (group_id, user_id))"
+    )
+    legacy_db.close()
     admin_password = secrets.token_urlsafe(18)
     user_password = secrets.token_urlsafe(18)
     os.environ.update({
@@ -23,10 +32,14 @@ with tempfile.TemporaryDirectory() as data_dir:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
+    with closing(sqlite3.connect(Path(data_dir) / "greennet.db")) as migrated_db:
+        assert "muted" in {row[1] for row in migrated_db.execute("PRAGMA table_info(chat_group_members)")}
+
     admin = module.app.test_client()
     creator = module.app.test_client()
     member_one = module.app.test_client()
     member_two = module.app.test_client()
+    member_three = module.app.test_client()
 
     assert admin.post("/api/login", json={
         "username": "admin", "password": admin_password,
@@ -46,6 +59,7 @@ with tempfile.TemporaryDirectory() as data_dir:
         (creator, "creator", "Ирина", "Орлова"),
         (member_one, "member-one", "Анна", "Петрова"),
         (member_two, "member-two", "Олег", "Смирнов"),
+        (member_three, "member-three", "Мария", "Волкова"),
     )
     for client, username, first_name, last_name in users:
         response = client.post("/api/register", json={
@@ -73,6 +87,47 @@ with tempfile.TemporaryDirectory() as data_dir:
         "text": message,
     }).status_code == 200
     assert member_one.get("/api/state").get_json()["group_messages"][0]["text"] == message
+
+    member_one_id = ids["Анна Петрова"]
+    member_two_id = ids["Олег Смирнов"]
+    member_three_id = ids["Мария Волкова"]
+    creator_id = ids["Ирина Орлова"]
+
+    assert member_one.post(f"/api/chat/groups/{group_id}/members", json={
+        "member_ids": [member_three_id],
+    }).status_code == 403
+    added = creator.post(f"/api/chat/groups/{group_id}/members", json={
+        "member_ids": [member_three_id],
+    })
+    assert added.status_code == 200, added.get_json()
+    group = creator.get("/api/state").get_json()["chat_groups"][0]
+    assert len(group["members"]) == 4
+    assert all("muted" in member for member in group["members"])
+
+    muted = creator.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+        "muted": True,
+    })
+    assert muted.status_code == 200, muted.get_json()
+    assert member_one.post(f"/api/chat/groups/{group_id}/messages", json={
+        "text": "Это сообщение должно быть заблокировано",
+    }).status_code == 403
+    assert member_two.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+        "muted": False,
+    }).status_code == 403
+    assert creator.patch(f"/api/chat/groups/{group_id}/members/{member_one_id}", json={
+        "muted": False,
+    }).status_code == 200
+    assert member_one.post(f"/api/chat/groups/{group_id}/messages", json={
+        "text": "После снятия mute отправка снова работает",
+    }).status_code == 200
+
+    assert creator.delete(f"/api/chat/groups/{group_id}/members/{member_three_id}").status_code == 200
+    assert member_three.get("/api/state").get_json()["chat_groups"] == []
+    assert member_three.post(f"/api/chat/groups/{group_id}/messages", json={
+        "text": "Удалённый участник не может писать",
+    }).status_code == 404
+    assert creator.delete(f"/api/chat/groups/{group_id}/members/{creator_id}").status_code == 400
+    assert creator.delete(f"/api/chat/groups/{group_id}/members/{member_two_id}").status_code == 400
 
     rejected = creator.post("/api/chat/groups", json={
         "name": "Личный диалог",
