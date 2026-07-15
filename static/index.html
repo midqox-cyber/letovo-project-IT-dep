@@ -547,10 +547,12 @@
   .group-room{display:flex; flex-direction:column; min-width:0; min-height:0; background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 90%,var(--accent-soft)))}
   .group-room-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:20px 22px 14px}
   .group-room-head h3{font-size:19px}.group-room-head p{margin:3px 0 0;color:var(--text-dim);font-size:12px}
+  .group-room-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.group-room-actions .btn{padding:8px 11px}.group-room-actions .btn svg{width:15px;height:15px}
   .danger-icon{color:var(--c-red)}
   .group-members{display:flex; flex-wrap:wrap; gap:7px; padding:0 22px 14px; border-bottom:1px solid var(--border)}
   .group-member{display:inline-flex; align-items:center; gap:6px; padding:4px 9px 4px 5px; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; font-size:10.5px;color:var(--text-dim)}
   .group-member i{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-style:normal;font-size:8px;font-weight:700;color:#fff;background:var(--gemini)}
+  .group-member.muted{opacity:.68;border-style:dashed}.group-member em{font-style:normal;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent-strong)}.group-member em.mute{color:var(--c-red)}
   .group-feed{flex:1; min-height:320px; max-height:54vh; overflow-y:auto; display:flex; flex-direction:column; gap:9px; padding:20px 22px}
   .group-message{align-self:flex-start; max-width:min(76%,650px); padding:10px 13px; border:1px solid var(--border); border-radius:6px 18px 18px 18px; background:var(--surface-2); font-size:13.5px; line-height:1.5; white-space:normal; word-break:break-word; animation:messageIn .3s cubic-bezier(.2,.8,.2,1) both}
   .group-message>div:last-child{white-space:pre-wrap}
@@ -568,6 +570,11 @@
   .group-person{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);cursor:pointer;transition:border-color .2s,transform .2s}
   .group-person:hover{transform:translateY(-1px);border-color:var(--accent)}.group-person input{width:16px;height:16px;accent-color:var(--accent)}
   .group-person span:last-child{min-width:0}.group-person b,.group-person small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.group-person b{font-size:12px}.group-person small{font-size:9.5px;color:var(--text-faint)}
+  .group-manage-section{margin-top:18px}.group-manage-section:first-of-type{margin-top:12px}.group-manage-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.055em}
+  .group-manage-list{display:flex;flex-direction:column;gap:8px;max-height:310px;overflow:auto;padding:2px}.group-manage-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}
+  .group-manage-copy{min-width:0;flex:1}.group-manage-copy b,.group-manage-copy small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.group-manage-copy b{font-size:12px}.group-manage-copy small{font-size:9.5px;color:var(--text-faint)}
+  .group-manage-actions{display:flex;align-items:center;gap:6px}.group-manage-actions .btn{padding:7px 9px;font-size:10.5px}.member-state{display:inline-flex;margin-left:5px;padding:2px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);font-size:8px;text-transform:uppercase;letter-spacing:.05em}.member-state.muted{background:var(--c-red-soft);color:var(--c-red)}
+  .group-muted-note{margin:0 22px 14px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--c-red) 25%,var(--border));border-radius:13px;background:color-mix(in srgb,var(--c-red) 7%,var(--surface));color:var(--c-red);font-size:11.5px}
 
   /* Live NIMPH sensor map */
   .rail{overflow-y:auto;scrollbar-width:none}.rail::-webkit-scrollbar{display:none}
@@ -1152,6 +1159,8 @@
   function groupRoom(group){
     const messages=(S.group_messages||[]).filter(m=>m.group_id===group.id);
     const canManage=group.created_by===ME.id || ME.role==="admin";
+    const myMembership=(group.members||[]).find(m=>m.id===ME.id);
+    const meMuted=!!(myMembership&&myMembership.muted);
     const feed=messages.length ? messages.map(m=>{
       const mine=m.author_id===ME.id;
       const canDelete=mine||canManage;
@@ -1159,14 +1168,15 @@
         <div class="group-message-top"><b>${esc(m.author)}</b><span class="tnum">${hm(m.ts)}</span>${canDelete?`<button class="chan-del" data-del-group-msg="${group.id}|${m.id}" title="Удалить сообщение">×</button>`:""}</div>
         <div>${esc(m.text)}</div></article>`;
     }).join("") : `<div class="groups-empty room-empty">${I.chat}<b>Начните разговор</b><span>Первое сообщение увидят все участники этой комнаты.</span></div>`;
-    const members=group.members.map(m=>`<span class="group-member" title="${esc((S.roles[m.role]||{}).label||m.role)}"><i>${esc(m.short||"?")}</i>${esc(m.name)}</span>`).join("");
+    const members=group.members.map(m=>`<span class="group-member ${m.muted?"muted":""}" title="${esc((S.roles[m.role]||{}).label||m.role)}"><i>${esc(m.short||"?")}</i>${esc(m.name)}${m.id===group.created_by?`<em>главный</em>`:""}${m.muted?`<em class="mute">mute</em>`:""}</span>`).join("");
     return `<header class="group-room-head"><div><h3>${esc(group.name)}</h3><p>${esc(group.description||"Рабочая групповая комната")}</p></div>
-        ${canManage?`<button class="icon-btn danger-icon" data-del-group="${group.id}" title="Удалить группу">${I.trash}</button>`:""}</header>
+        ${canManage?`<div class="group-room-actions"><button class="btn ghost" data-group-members="${group.id}">${I.admin}<span>Участники</span></button><button class="icon-btn danger-icon" data-del-group="${group.id}" title="Удалить группу">${I.trash}</button></div>`:""}</header>
       <div class="group-members">${members}</div>
       <div class="group-feed">${feed}</div>
-      <div class="group-composer"><textarea id="groupText" maxlength="1000" placeholder="Сообщение для всей группы…"></textarea>
-        <button class="btn primary" data-group-send="${group.id}">${I.send}<span>Отправить</span></button></div>
-      <div class="composer-tip">Ctrl + Enter — отправить · личные сообщения отключены</div>`;
+      ${meMuted?`<div class="group-muted-note">Главный группы включил вам mute. История доступна, но отправка сообщений временно отключена.</div>`:""}
+      <div class="group-composer"><textarea id="groupText" maxlength="1000" placeholder="${meMuted?"Отправка временно отключена":"Сообщение для всей группы…"}" ${meMuted?"disabled":""}></textarea>
+        <button class="btn primary" data-group-send="${group.id}" ${meMuted?"disabled":""}>${I.send}<span>Отправить</span></button></div>
+      <div class="composer-tip">${meMuted?"Mute может снять главный группы":"Ctrl + Enter — отправить · личные сообщения отключены"}</div>`;
   }
   function groupModal(){
     const people=(S.roster||[]).filter(u=>u.id!==ME.id);
@@ -1178,6 +1188,41 @@
       <div class="field"><label>Участники · минимум 2</label><div class="group-picker">${checks}</div></div>
       <div class="form-err" id="g-err"></div>
       <div class="modal-acts"><button class="btn ghost" data-modal-close>Отмена</button><button class="btn primary" data-group-save>${I.check} Создать группу</button></div>`);
+  }
+  function groupMembersModal(gid){
+    const group=(S.chat_groups||[]).find(g=>g.id===gid);
+    if(!group || !(group.created_by===ME.id || ME.role==="admin")){ toast("Недостаточно прав",true); return; }
+    const memberIds=new Set((group.members||[]).map(m=>m.id));
+    const available=(S.roster||[]).filter(u=>u.active!==false&&!memberIds.has(u.id));
+    const addRows=available.map(u=>`<label class="group-person"><input class="group-add-check" type="checkbox" value="${u.id}">
+      <span class="mem-av">${esc(u.short||"?")}</span><span><b>${esc(u.name)}</b><small>${esc(u.dept||"")}</small></span></label>`).join("");
+    const current=(group.members||[]).map(m=>{
+      const owner=m.id===group.created_by;
+      const canRemove=!owner&&group.members.length>3;
+      return `<div class="group-manage-row"><span class="mem-av">${esc(m.short||"?")}</span><span class="group-manage-copy"><b>${esc(m.name)}${owner?`<span class="member-state">главный</span>`:""}${m.muted?`<span class="member-state muted">mute</span>`:""}</b><small>${esc((S.roles[m.role]||{}).label||m.role)}</small></span>
+        <span class="group-manage-actions">${owner?`<small>управляет группой</small>`:`<button class="btn ghost" data-group-mute="${gid}|${m.id}|${m.muted?0:1}">${m.muted?"Снять mute":"Mute"}</button><button class="btn danger" data-group-remove="${gid}|${m.id}" ${canRemove?"":"disabled"} title="${canRemove?"Удалить из группы":"В группе должно остаться минимум 3 участника"}">Удалить</button>`}</span></div>`;
+    }).join("");
+    openModal(`<h3>Участники · ${esc(group.name)}</h3><div class="sub">Главный группы может приглашать коллег, удалять участников и временно запрещать им отправку сообщений.</div>
+      <div class="group-manage-section"><div class="group-manage-title"><span>Текущий состав</span><span>${group.members.length}</span></div><div class="group-manage-list">${current}</div></div>
+      <div class="group-manage-section"><div class="group-manage-title"><span>Добавить участников</span><span>${available.length} доступно</span></div>${available.length?`<div class="group-picker">${addRows}</div>`:`<div class="reg-note">Все активные пользователи уже состоят в группе.</div>`}</div>
+      <div class="form-err" id="gm-err"></div>
+      <div class="modal-acts"><button class="btn ghost" data-modal-close>Закрыть</button>${available.length?`<button class="btn primary" data-group-add-save="${gid}">${I.plus} Добавить выбранных</button>`:""}</div>`);
+  }
+  async function addGroupMembers(gid){
+    const err=el("gm-err"); if(err) err.textContent="";
+    const member_ids=[...document.querySelectorAll(".group-add-check:checked")].map(x=>Number(x.value));
+    if(!member_ids.length){ if(err) err.textContent="Выберите хотя бы одного участника"; return; }
+    try{ const r=await api(`/api/chat/groups/${gid}/members`,"POST",{member_ids}); await refresh(); groupMembersModal(gid); toast(`Добавлено участников: ${r.added||member_ids.length}`); }
+    catch(e){ if(e.status===401) handleAuthErr(e); else if(err) err.textContent=e.error||"Ошибка"; }
+  }
+  async function setGroupMemberMute(gid,uid,muted){
+    try{ await api(`/api/chat/groups/${gid}/members/${uid}`,"PATCH",{muted}); await refresh(); groupMembersModal(gid); toast(muted?"Участнику включён mute":"Mute снят"); }
+    catch(e){ if(e.status===401) handleAuthErr(e); else toast(e.error||"Не удалось изменить mute",true); }
+  }
+  async function removeGroupMember(gid,uid){
+    if(!confirm("Удалить участника из группового чата? История его сообщений сохранится.")) return;
+    try{ await api(`/api/chat/groups/${gid}/members/${uid}`,"DELETE"); await refresh(); groupMembersModal(gid); toast("Участник удалён из группы"); }
+    catch(e){ if(e.status===401) handleAuthErr(e); else toast(e.error||"Не удалось удалить участника",true); }
   }
   async function saveGroup(){
     const err=el("g-err"); err.textContent="";
@@ -1804,7 +1849,7 @@
 
   /* ---------------- Event delegation ---------------- */
   document.addEventListener("click", (e)=>{
-    const t=e.target.closest("[data-view],[data-filter],[data-ctype],[data-send-msg],[data-verify],[data-reject],[data-msg-task],[data-new-task],[data-task-start],[data-task-done],[data-task-save],[data-modal-close],[data-modal-bg],[data-mapobj],[data-toggle-theme],[data-logout],[data-new-user],[data-user-save],[data-urole],[data-udept],[data-upass],[data-utoggle],[data-udel],[data-pass-save],[data-reset-all],[data-new-news],[data-news-save],[data-del-news],[data-import-news],[data-new-sched],[data-sched-save],[data-del-sched],[data-edit-sched],[data-import-sched],[data-import-save],[data-show-license],[data-auth-tab],[data-show-terms],[data-dept-sel],[data-chan-send],[data-fin-send],[data-del-msg],[data-del-chan],[data-portal-open],[data-portal-go],[data-new-group],[data-group-save],[data-group-sel],[data-group-send],[data-del-group],[data-del-group-msg],[data-sensor-refresh],[data-sensor-type],[data-sensor-id]");
+    const t=e.target.closest("[data-view],[data-filter],[data-ctype],[data-send-msg],[data-verify],[data-reject],[data-msg-task],[data-new-task],[data-task-start],[data-task-done],[data-task-save],[data-modal-close],[data-modal-bg],[data-mapobj],[data-toggle-theme],[data-logout],[data-new-user],[data-user-save],[data-urole],[data-udept],[data-upass],[data-utoggle],[data-udel],[data-pass-save],[data-reset-all],[data-new-news],[data-news-save],[data-del-news],[data-import-news],[data-new-sched],[data-sched-save],[data-del-sched],[data-edit-sched],[data-import-sched],[data-import-save],[data-show-license],[data-auth-tab],[data-show-terms],[data-dept-sel],[data-chan-send],[data-fin-send],[data-del-msg],[data-del-chan],[data-portal-open],[data-portal-go],[data-new-group],[data-group-save],[data-group-sel],[data-group-send],[data-del-group],[data-del-group-msg],[data-group-members],[data-group-add-save],[data-group-mute],[data-group-remove],[data-sensor-refresh],[data-sensor-type],[data-sensor-id]");
     if(!t) return;
     if(t.hasAttribute("data-view")){ U.view=t.getAttribute("data-view"); saveUI(); renderRail(); renderMain(); animateMain(); return; }
     if(t.hasAttribute("data-show-license")){ licenseModal(); return; }
@@ -1820,6 +1865,10 @@
     if(t.hasAttribute("data-group-send")){ sendGroup(Number(t.getAttribute("data-group-send"))); return; }
     if(t.hasAttribute("data-del-group")){ deleteGroup(Number(t.getAttribute("data-del-group"))); return; }
     if(t.hasAttribute("data-del-group-msg")){ const [gid,mid]=t.getAttribute("data-del-group-msg").split("|").map(Number); deleteGroupMessage(gid,mid); return; }
+    if(t.hasAttribute("data-group-members")){ groupMembersModal(Number(t.getAttribute("data-group-members"))); return; }
+    if(t.hasAttribute("data-group-add-save")){ addGroupMembers(Number(t.getAttribute("data-group-add-save"))); return; }
+    if(t.hasAttribute("data-group-mute")){ const [gid,uid,muted]=t.getAttribute("data-group-mute").split("|").map(Number); setGroupMemberMute(gid,uid,muted===1); return; }
+    if(t.hasAttribute("data-group-remove")){ const [gid,uid]=t.getAttribute("data-group-remove").split("|").map(Number); removeGroupMember(gid,uid); return; }
     if(t.hasAttribute("data-sensor-refresh")){ loadSensors(true); return; }
     if(t.hasAttribute("data-sensor-type")){ U.sensorType=t.getAttribute("data-sensor-type"); saveUI(); renderSensors(); return; }
     if(t.hasAttribute("data-sensor-id")){ U.sensorSelected=t.getAttribute("data-sensor-id"); saveUI(); renderSensors(); return; }
