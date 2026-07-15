@@ -1158,25 +1158,26 @@
   }
   function groupRoom(group){
     const messages=(S.group_messages||[]).filter(m=>m.group_id===group.id);
-    const canManage=group.created_by===ME.id || ME.role==="admin";
+    const canManageMembers=!!group.can_manage_members;
+    const canDeleteGroup=group.created_by===ME.id || ME.role==="admin";
     const myMembership=(group.members||[]).find(m=>m.id===ME.id);
     const meMuted=!!(myMembership&&myMembership.muted);
     const feed=messages.length ? messages.map(m=>{
       const mine=m.author_id===ME.id;
-      const canDelete=mine||canManage;
+      const canDelete=mine||canDeleteGroup;
       return `<article class="group-message ${mine?"mine":""}">
         <div class="group-message-top"><b>${esc(m.author)}</b><span class="tnum">${hm(m.ts)}</span>${canDelete?`<button class="chan-del" data-del-group-msg="${group.id}|${m.id}" title="Удалить сообщение">×</button>`:""}</div>
         <div>${esc(m.text)}</div></article>`;
     }).join("") : `<div class="groups-empty room-empty">${I.chat}<b>Начните разговор</b><span>Первое сообщение увидят все участники этой комнаты.</span></div>`;
     const members=group.members.map(m=>`<span class="group-member ${m.muted?"muted":""}" title="${esc((S.roles[m.role]||{}).label||m.role)}"><i>${esc(m.short||"?")}</i>${esc(m.name)}${m.id===group.created_by?`<em>главный</em>`:""}${m.muted?`<em class="mute">mute</em>`:""}</span>`).join("");
     return `<header class="group-room-head"><div><h3>${esc(group.name)}</h3><p>${esc(group.description||"Рабочая групповая комната")}</p></div>
-        ${canManage?`<div class="group-room-actions"><button class="btn ghost" data-group-members="${group.id}">${I.admin}<span>Участники</span></button><button class="icon-btn danger-icon" data-del-group="${group.id}" title="Удалить группу">${I.trash}</button></div>`:""}</header>
+        ${canManageMembers||canDeleteGroup?`<div class="group-room-actions">${canManageMembers?`<button class="btn ghost" data-group-members="${group.id}">${I.admin}<span>Участники</span></button>`:""}${canDeleteGroup?`<button class="icon-btn danger-icon" data-del-group="${group.id}" title="Удалить группу">${I.trash}</button>`:""}</div>`:""}</header>
       <div class="group-members">${members}</div>
       <div class="group-feed">${feed}</div>
-      ${meMuted?`<div class="group-muted-note">Главный группы включил вам mute. История доступна, но отправка сообщений временно отключена.</div>`:""}
+      ${meMuted?`<div class="group-muted-note">Модератор группы включил вам mute. История доступна, но отправка сообщений временно отключена.</div>`:""}
       <div class="group-composer"><textarea id="groupText" maxlength="1000" placeholder="${meMuted?"Отправка временно отключена":"Сообщение для всей группы…"}" ${meMuted?"disabled":""}></textarea>
         <button class="btn primary" data-group-send="${group.id}" ${meMuted?"disabled":""}>${I.send}<span>Отправить</span></button></div>
-      <div class="composer-tip">${meMuted?"Mute может снять главный группы":"Ctrl + Enter — отправить · личные сообщения отключены"}</div>`;
+      <div class="composer-tip">${meMuted?"Mute может снять модератор группы":"Ctrl + Enter — отправить · личные сообщения отключены"}</div>`;
   }
   function groupModal(){
     const people=(S.roster||[]).filter(u=>u.id!==ME.id);
@@ -1191,7 +1192,7 @@
   }
   function groupMembersModal(gid){
     const group=(S.chat_groups||[]).find(g=>g.id===gid);
-    if(!group || !(group.created_by===ME.id || ME.role==="admin")){ toast("Недостаточно прав",true); return; }
+    if(!group || !group.can_manage_members){ toast("Недостаточно прав",true); return; }
     const memberIds=new Set((group.members||[]).map(m=>m.id));
     const available=(S.roster||[]).filter(u=>u.active!==false&&!memberIds.has(u.id));
     const addRows=available.map(u=>`<label class="group-person"><input class="group-add-check" type="checkbox" value="${u.id}">
@@ -1202,7 +1203,7 @@
       return `<div class="group-manage-row"><span class="mem-av">${esc(m.short||"?")}</span><span class="group-manage-copy"><b>${esc(m.name)}${owner?`<span class="member-state">главный</span>`:""}${m.muted?`<span class="member-state muted">mute</span>`:""}</b><small>${esc((S.roles[m.role]||{}).label||m.role)}</small></span>
         <span class="group-manage-actions">${owner?`<small>управляет группой</small>`:`<button class="btn ghost" data-group-mute="${gid}|${m.id}|${m.muted?0:1}">${m.muted?"Снять mute":"Mute"}</button><button class="btn danger" data-group-remove="${gid}|${m.id}" ${canRemove?"":"disabled"} title="${canRemove?"Удалить из группы":"В группе должно остаться минимум 3 участника"}">Удалить</button>`}</span></div>`;
     }).join("");
-    openModal(`<h3>Участники · ${esc(group.name)}</h3><div class="sub">Главный группы может приглашать коллег, удалять участников и временно запрещать им отправку сообщений.</div>
+    openModal(`<h3>Участники · ${esc(group.name)}</h3><div class="sub">Создатель и участники со старшей ролью могут приглашать коллег, удалять участников и временно запрещать им отправку сообщений.</div>
       <div class="group-manage-section"><div class="group-manage-title"><span>Текущий состав</span><span>${group.members.length}</span></div><div class="group-manage-list">${current}</div></div>
       <div class="group-manage-section"><div class="group-manage-title"><span>Добавить участников</span><span>${available.length} доступно</span></div>${available.length?`<div class="group-picker">${addRows}</div>`:`<div class="reg-note">Все активные пользователи уже состоят в группе.</div>`}</div>
       <div class="form-err" id="gm-err"></div>
