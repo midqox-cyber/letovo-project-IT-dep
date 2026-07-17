@@ -279,6 +279,34 @@
   .toast.err .d{background:var(--c-red)}
   @keyframes tin{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
 
+  /* Notifications */
+  .notify-btn{position:relative;flex:none}
+  .notify-count{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:10px;background:var(--c-red);color:#fff;border:2px solid var(--surface);display:grid;place-items:center;font:700 9px/1 var(--mono)}
+  .notify-scrim{position:fixed;inset:0;z-index:94;background:rgba(5,8,7,.24);backdrop-filter:blur(1px)}
+  .notify-panel{position:fixed;z-index:95;top:64px;right:18px;width:min(410px,calc(100vw - 24px));max-height:min(720px,calc(100vh - 82px));display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border-strong);border-radius:18px;box-shadow:0 22px 60px rgba(0,0,0,.28);overflow:hidden;animation:notifyIn .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes notifyIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+  .notify-head{display:flex;align-items:center;gap:10px;padding:16px 16px 13px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--accent-soft),transparent)}
+  .notify-head-copy{min-width:0;flex:1}.notify-head-copy h3{font-size:16px}.notify-head-copy p{margin:2px 0 0;color:var(--text-dim);font-size:11.5px}
+  .notify-head .icon-btn{width:30px;height:30px}
+  .notify-actions{display:flex;gap:7px;padding:10px 12px;border-bottom:1px solid var(--border);overflow-x:auto}.notify-actions .btn{white-space:nowrap}
+  .notify-list{overflow:auto;padding:7px;min-height:130px}
+  .notify-empty{display:grid;place-items:center;text-align:center;min-height:210px;padding:28px;color:var(--text-dim)}.notify-empty svg{width:32px;height:32px;margin-bottom:10px;color:var(--text-faint)}
+  .notify-item{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:start;text-align:left;padding:11px;border:0;border-radius:12px;background:transparent;color:var(--text);position:relative}
+  .notify-item:hover{background:var(--surface-2)}.notify-item.unread{background:var(--accent-soft)}.notify-item.unread::after{content:"";position:absolute;top:15px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .notify-symbol{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:var(--surface-3);border:1px solid var(--border)}
+  .notify-symbol svg{width:18px;height:18px}
+  .notify-item.critical .notify-symbol{background:var(--c-red-soft);color:var(--c-red)}.notify-item.warning .notify-symbol{background:var(--c-amber-soft);color:var(--c-amber)}
+  .notify-copy{min-width:0;padding-right:6px}.notify-copy b{display:block;font-size:12.5px;line-height:1.3}.notify-copy span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text-dim);font-size:11.5px;line-height:1.4;margin-top:3px;word-break:break-word}
+  .notify-time{font:10px/1.3 var(--mono);color:var(--text-faint);padding-top:2px;padding-right:10px}
+  .notify-settings{border-top:1px solid var(--border);padding:11px 14px;background:var(--surface-2)}.notify-settings summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;font:700 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim)}.notify-settings summary::-webkit-details-marker{display:none}
+  .notify-prefs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}.notify-pref{border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-dim);padding:8px 9px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;text-align:left}.notify-pref.on{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
+  .notify-switch{width:24px;height:14px;border-radius:8px;background:var(--border-strong);position:relative;flex:none}.notify-switch::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .16s}.notify-pref.on .notify-switch{background:var(--accent)}.notify-pref.on .notify-switch::after{transform:translateX(10px)}
+  .notify-browser{margin-top:9px;width:100%;justify-content:center}.notify-browser.granted{color:var(--ok);border-color:var(--c-green)}
+  .event-alert-wrap{position:fixed;z-index:92;right:18px;top:70px;width:min(360px,calc(100vw - 24px));display:flex;flex-direction:column;gap:9px;pointer-events:none}
+  .event-alert{pointer-events:auto;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:12px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(16px);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);color:var(--text);animation:eventIn .3s cubic-bezier(.2,.8,.2,1)}
+  .event-alert .notify-symbol{width:34px;height:34px}.event-alert b{display:block;font-size:12.5px}.event-alert span{display:block;color:var(--text-dim);font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event-alert.critical{border-color:var(--c-red)}.event-alert.warning{border-color:var(--c-amber)}
+  @keyframes eventIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+
   @media (max-width:1150px){ .shell{grid-template-columns:74px minmax(0,1fr); grid-template-areas:"rail top" "rail main"} .side{display:none} }
   @media (max-width:720px){
     .shell{grid-template-columns:1fr; grid-template-rows:52px minmax(0,1fr) 60px; grid-template-areas:"top" "main" "rail"}
@@ -288,6 +316,7 @@
     .board{grid-template-columns:1fr} .map-wrap{grid-template-columns:1fr}
     .top{padding:0 12px; gap:10px} .clock .zone,.live span{display:none} .who-box .who{display:none}
     .main{padding:14px 12px 30px}
+    .notify-panel{top:58px;right:6px;width:calc(100vw - 12px);max-height:calc(100vh - 126px);border-radius:15px}.notify-prefs{grid-template-columns:1fr}.event-alert-wrap{top:auto;bottom:70px;right:8px;width:calc(100vw - 16px)}
   }
   /* News */
   .news-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:13px}
@@ -641,6 +670,8 @@
 <body>
   <div id="root"></div>
   <div id="modal-root"></div>
+  <div id="notification-root"></div>
+  <div class="event-alert-wrap" id="alert-root"></div>
   <div class="toast-wrap" id="toast-root"></div>
 
 <script>
@@ -671,6 +702,7 @@
     logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>',
     arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
     trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+    bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
     news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a4 4 0 0 1 0 7"/></svg>',
     sched:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M12 13v3l2 1"/></svg>',
   };
@@ -704,6 +736,174 @@
   function hm(iso){ if(!iso) return "--:--"; const d=new Date(iso); if(isNaN(d)) return "--:--"; return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
   function cvar(v){ return `--mc:var(${v});--mc-soft:var(${v}-soft)`; }
   function toast(msg, err){ const w=el("toast-root"); const t=document.createElement("div"); t.className="toast"+(err?" err":""); t.innerHTML='<span class="d"></span>'+esc(msg); w.appendChild(t); setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .3s"; setTimeout(()=>t.remove(),300); }, 2800); }
+
+  /* ---------------- Notifications ---------------- */
+  const BASE_TITLE = document.title;
+  const NOTIFY_SOURCES = [
+    {key:"news", field:"news", label:"Новости", symbol:"📰", view:"news"},
+    {key:"feed", field:"messages", label:"Лента", symbol:"●", view:"feed"},
+    {key:"channels", field:"channels", label:"Отделы", symbol:"💬", view:"depts"},
+    {key:"groups", field:"group_messages", label:"Групповые чаты", symbol:"👥", view:"groups"},
+    {key:"hotspots", field:"map_objects", label:"Очаги", symbol:"⚠", view:"map", filter:item=>item.kind==="focus"},
+    {key:"tasks", field:"tasks", label:"Задачи", symbol:"✓", view:"tasks"},
+    {key:"schedule", field:"schedule", label:"Расписание", symbol:"◷", view:"schedule"},
+  ];
+  const NOTIFY_RUNTIME = {userId:null, profile:null, open:false};
+
+  function defaultNotifyPrefs(){ return Object.fromEntries(NOTIFY_SOURCES.map(source=>[source.key,true])); }
+  function defaultNotifyProfile(){ return {initialized:false,cursors:{},items:[],prefs:defaultNotifyPrefs(),browser:true}; }
+  function notificationStorageKey(){ return "greennet_notifications_v2_"+(ME&&ME.id!=null?ME.id:"guest"); }
+  function ensureNotifyProfile(){
+    if(!ME) return defaultNotifyProfile();
+    if(NOTIFY_RUNTIME.profile && NOTIFY_RUNTIME.userId===ME.id) return NOTIFY_RUNTIME.profile;
+    let saved={};
+    try{ saved=JSON.parse(localStorage.getItem(notificationStorageKey())||"{}"); }catch(e){}
+    const base=defaultNotifyProfile();
+    NOTIFY_RUNTIME.userId=ME.id;
+    NOTIFY_RUNTIME.profile=Object.assign(base,saved,{
+      cursors:saved&&saved.cursors&&typeof saved.cursors==="object"?saved.cursors:{},
+      items:Array.isArray(saved&&saved.items)?saved.items.slice(0,80):[],
+      prefs:Object.assign(defaultNotifyPrefs(),saved&&saved.prefs||{}),
+    });
+    return NOTIFY_RUNTIME.profile;
+  }
+  function saveNotifyProfile(){
+    if(!ME||!NOTIFY_RUNTIME.profile) return;
+    try{ localStorage.setItem(notificationStorageKey(),JSON.stringify(NOTIFY_RUNTIME.profile)); }catch(e){}
+  }
+  function sourceItems(state,source){
+    const items=Array.isArray(state&&state[source.field])?state[source.field]:[];
+    return source.filter?items.filter(source.filter):items;
+  }
+  function maxSourceId(state,source){ return sourceItems(state,source).reduce((max,item)=>Math.max(max,Number(item.id)||0),0); }
+  function advanceNotificationCursors(state){
+    const profile=ensureNotifyProfile();
+    NOTIFY_SOURCES.forEach(source=>{ profile.cursors[source.key]=Math.max(Number(profile.cursors[source.key])||0,maxSourceId(state,source)); });
+    profile.initialized=true;
+    saveNotifyProfile();
+  }
+  function isOwnNotification(source,item){
+    if(!ME) return false;
+    if(source.key==="groups") return Number(item.author_id)===Number(ME.id);
+    if(source.key==="feed") return item.author_name===ME.name;
+    if(source.key==="channels") return item.author===ME.name;
+    if(source.key==="news") return item.author===ME.name;
+    if(source.key==="tasks") return item.created_by===ME.name;
+    return false;
+  }
+  function clipNotificationText(value,limit=150){ const text=String(value||"").replace(/\s+/g," ").trim(); return text.length>limit?text.slice(0,limit-1)+"…":text; }
+  function buildNotification(source,item,state){
+    let title=source.label,body="",priority="normal",detail={};
+    if(source.key==="news"){
+      title=item.level==="critical"?"Критическая новость":"Новая новость";
+      body=(item.title||"")+(item.body?" · "+item.body:"");
+      priority=item.level==="critical"?"critical":item.level==="warning"?"warning":"normal";
+    }else if(source.key==="feed"){
+      const type=state.msg_types&&state.msg_types[item.type];
+      title="Новое сообщение · "+(type&&type.label||"лента"); body=(item.author_name?item.author_name+": ":"")+item.text;
+      priority=item.type==="urgent"||item.sev==="high"?"critical":item.sev==="medium"?"warning":"normal";
+    }else if(source.key==="channels"){
+      title="Сообщение отдела"+(item.dept?" · "+item.dept:""); body=(item.author?item.author+": ":"")+item.text; detail.dept=item.dept;
+    }else if(source.key==="groups"){
+      const group=(state.chat_groups||[]).find(candidate=>Number(candidate.id)===Number(item.group_id));
+      title="Сообщение в группе · "+(group&&group.name||"чат"); body=(item.author?item.author+": ":"")+item.text; detail.groupId=item.group_id;
+    }else if(source.key==="hotspots"){
+      title="Новый очаг"+(item.sev==="high"?" · высокий риск":""); body=item.label||"На карту добавлена новая отметка"; detail.objectId=item.id;
+      priority=item.sev==="high"?"critical":item.sev==="medium"?"warning":"normal";
+    }else if(source.key==="tasks"){
+      title="Новая задача"+(item.dept?" · "+item.dept:""); body=(item.title||"")+(item.assignee?" · "+item.assignee:"");
+    }else if(source.key==="schedule"){
+      title="Новое событие расписания"; body=(item.at?item.at+" · ":"")+(item.title||"")+(item.dept?" · "+item.dept:"");
+    }
+    return Object.assign({
+      key:source.key+":"+item.id,kind:source.key,label:source.label,symbol:source.symbol,view:source.view,
+      title:clipNotificationText(title,90),body:clipNotificationText(body),priority,ts:item.ts||new Date().toISOString(),
+      createdAt:new Date().toISOString(),unread:true,
+    },detail);
+  }
+  function processNotificationState(state){
+    const profile=ensureNotifyProfile();
+    if(!profile.initialized){ advanceNotificationCursors(state); return []; }
+    const fresh=[];
+    NOTIFY_SOURCES.forEach(source=>{
+      const previous=Number(profile.cursors[source.key])||0;
+      const items=sourceItems(state,source);
+      const current=items.reduce((max,item)=>Math.max(max,Number(item.id)||0),previous);
+      if(profile.prefs[source.key]!==false){
+        items.filter(item=>(Number(item.id)||0)>previous).sort((a,b)=>(Number(a.id)||0)-(Number(b.id)||0)).forEach(item=>{
+          if(!isOwnNotification(source,item)) fresh.push(buildNotification(source,item,state));
+        });
+      }
+      profile.cursors[source.key]=current;
+    });
+    if(fresh.length){
+      const existing=new Set(profile.items.map(item=>item.key));
+      const unique=fresh.filter(item=>!existing.has(item.key));
+      unique.sort((a,b)=>Date.parse(a.ts||a.createdAt)-Date.parse(b.ts||b.createdAt));
+      profile.items=unique.slice().reverse().concat(profile.items).slice(0,80);
+    }
+    saveNotifyProfile();
+    updateNotificationTitle();
+    return fresh;
+  }
+  function notificationUnread(){ return ensureNotifyProfile().items.filter(item=>item.unread).length; }
+  function updateNotificationTitle(){ const count=ME?notificationUnread():0; document.title=count?`(${count}) ${BASE_TITLE}`:BASE_TITLE; }
+  function showEventAlert(item){
+    const root=el("alert-root"); if(!root) return;
+    while(root.children.length>=3) root.firstElementChild.remove();
+    const card=document.createElement("button"); card.type="button"; card.className="event-alert "+item.priority; card.setAttribute("data-notify-open",item.key);
+    card.innerHTML=`<span class="notify-symbol">${esc(item.symbol)}</span><span><b>${esc(item.title)}</b><span>${esc(item.body)}</span></span>`;
+    root.appendChild(card);
+    setTimeout(()=>{ card.style.opacity="0";card.style.transform="translateX(14px)";card.style.transition=".25s ease";setTimeout(()=>card.remove(),260); },7000);
+  }
+  function showBrowserNotification(item){
+    const profile=ensureNotifyProfile();
+    if(!profile.browser||!("Notification" in window)||Notification.permission!=="granted"||(!document.hidden&&document.hasFocus())) return;
+    try{
+      const note=new Notification(item.title,{body:item.body,tag:"greennet-"+item.key,renotify:true});
+      note.onclick=()=>{ window.focus(); openNotification(item.key); note.close(); };
+    }catch(e){}
+  }
+  function announceNotifications(items){
+    if(!items.length) return;
+    items.slice(-3).forEach((item,index)=>setTimeout(()=>{ showEventAlert(item); showBrowserNotification(item); },index*180));
+    if(items.length>3) toast("Новых событий: "+items.length);
+  }
+  function notificationPermission(){ return !("Notification" in window)?"unsupported":Notification.permission; }
+  async function enableBrowserNotifications(){
+    if(!("Notification" in window)){ toast("Этот браузер не поддерживает системные уведомления",true); return; }
+    if(Notification.permission==="denied"){ toast("Уведомления заблокированы в настройках браузера",true); return; }
+    const result=await Notification.requestPermission();
+    const profile=ensureNotifyProfile(); profile.browser=result==="granted"; saveNotifyProfile(); renderNotificationPanel();
+    toast(result==="granted"?"Системные уведомления включены":"Разрешение не выдано",result!=="granted");
+  }
+  function renderNotificationPanel(){
+    const root=el("notification-root"); if(!root) return;
+    if(!NOTIFY_RUNTIME.open||!ME){ root.innerHTML=""; return; }
+    const profile=ensureNotifyProfile(), unread=notificationUnread(), permission=notificationPermission();
+    const rows=profile.items.length?profile.items.map(item=>`<button type="button" class="notify-item ${item.unread?"unread":""} ${esc(item.priority||"normal")}" data-notify-open="${esc(item.key)}">
+      <span class="notify-symbol">${esc(item.symbol||"•")}</span><span class="notify-copy"><b>${esc(item.title)}</b><span>${esc(item.body)}</span></span><span class="notify-time">${hm(item.ts||item.createdAt)}</span></button>`).join(""):
+      `<div class="notify-empty">${I.bell}<div><b>Новых событий нет</b><br><span>Новости, сообщения и очаги появятся здесь автоматически.</span></div></div>`;
+    const browserLabel=permission==="granted"?"Системные уведомления включены":permission==="denied"?"Уведомления заблокированы":"Включить системные уведомления";
+    root.innerHTML=`<div class="notify-scrim" data-notify-close></div><section class="notify-panel" role="dialog" aria-label="Центр уведомлений">
+      <div class="notify-head"><span class="notify-symbol">${I.bell}</span><div class="notify-head-copy"><h3>Уведомления</h3><p>${unread?"Непрочитанных: "+unread:"Всё просмотрено"}</p></div><button class="icon-btn" data-notify-close title="Закрыть">${I.x}</button></div>
+      <div class="notify-actions"><button class="btn sm ghost" data-notify-read-all>Прочитать все</button><button class="btn sm ghost" data-notify-clear>Очистить</button></div>
+      <div class="notify-list">${rows}</div>
+      <details class="notify-settings"><summary><span>Настройки оповещений</span><span>⌄</span></summary><div class="notify-prefs">${NOTIFY_SOURCES.map(source=>`<button type="button" class="notify-pref ${profile.prefs[source.key]!==false?"on":""}" data-notify-setting="${source.key}"><span>${source.symbol} ${esc(source.label)}</span><i class="notify-switch"></i></button>`).join("")}</div>
+      <button class="btn ghost notify-browser ${permission==="granted"?"granted":""}" data-notify-browser>${browserLabel}</button></details>
+    </section>`;
+  }
+  function toggleNotificationPanel(force){ NOTIFY_RUNTIME.open=typeof force==="boolean"?force:!NOTIFY_RUNTIME.open; if(NOTIFY_RUNTIME.open&&el("alert-root")) el("alert-root").innerHTML=""; renderNotificationPanel(); }
+  function markAllNotificationsRead(){ const profile=ensureNotifyProfile();profile.items.forEach(item=>item.unread=false);saveNotifyProfile();updateNotificationTitle();renderTop();renderNotificationPanel(); }
+  function clearNotifications(){ const profile=ensureNotifyProfile();profile.items=[];saveNotifyProfile();updateNotificationTitle();renderTop();renderNotificationPanel(); }
+  function toggleNotificationSetting(key){ const profile=ensureNotifyProfile();if(!(key in profile.prefs)) return;profile.prefs[key]=profile.prefs[key]===false;saveNotifyProfile();renderNotificationPanel(); }
+  function openNotification(key){
+    const profile=ensureNotifyProfile(),item=profile.items.find(candidate=>candidate.key===key); if(!item) return;
+    item.unread=false;saveNotifyProfile();updateNotificationTitle();NOTIFY_RUNTIME.open=false;renderNotificationPanel();
+    if(item.groupId) U.groupSel=Number(item.groupId); if(item.dept) U.deptSel=item.dept;
+    U.view=item.view||"feed";saveUI();renderRail();renderTop();renderMain();animateMain();
+  }
+  function resetNotificationRuntime(){ NOTIFY_RUNTIME.userId=null;NOTIFY_RUNTIME.profile=null;NOTIFY_RUNTIME.open=false;el("notification-root").innerHTML="";el("alert-root").innerHTML="";document.title=BASE_TITLE; }
 
   let apiBusy = false;   // защита от двойной отправки (быстрый двойной клик)
   async function api(path, method, body){
@@ -744,8 +944,11 @@
   async function enterApp(){
     stopPoll();
     await loadState();
+    const pendingNotifications=processNotificationState(S);
     renderShell();
     renderAll();
+    renderNotificationPanel();
+    announceNotifications(pendingNotifications);
     startClock();
     startPoll();
   }
@@ -904,6 +1107,7 @@
 
   function renderTop(){
     const st = S.settings||{};
+    const unread=notificationUnread();
     el("top").innerHTML = `
       <div class="incident">
         <span class="pulse-dot" title="Активный инцидент"></span>
@@ -913,6 +1117,7 @@
       <div class="top-spacer"></div>
       <span class="live"><span class="live-dot"></span><span>онлайн</span></span>
       <div class="clock tnum js-clock" id="clock" data-zone="МСК">--:--:--</div>
+      <button class="icon-btn notify-btn" data-notify-toggle title="Уведомления" aria-label="Уведомления${unread?": "+unread+" непрочитанных":""}">${I.bell}${unread?`<span class="notify-count">${unread>99?"99+":unread}</span>`:""}</button>
       <button class="icon-btn" data-toggle-theme title="Сменить тему">${I.theme}</button>
       <div class="who-box">
         <span class="who"><b>${esc(ME.name)}</b><span class="lbl" style="margin:0">${esc(ME.role_label)}</span></span>
@@ -1647,8 +1852,8 @@
   function animateMain(){ const m=el("main"); if(!m) return; m.classList.remove("view-in"); void m.offsetWidth; m.classList.add("view-in"); }
 
   /* ---------------- Actions ---------------- */
-  async function refresh(){ try{ await loadState(); renderAll(); }catch(e){ handleAuthErr(e); } }
-  function handleAuthErr(e){ if(e&&e.status===401){ closeModal(); ME=null; renderLogin(); toast("Сессия завершена, войдите снова", true); return true; } toast((e&&e.error)||"Ошибка", true); return false; }
+  async function refresh(){ try{ await loadState(); advanceNotificationCursors(S); renderAll(); renderNotificationPanel(); }catch(e){ handleAuthErr(e); } }
+  function handleAuthErr(e){ if(e&&e.status===401){ closeModal(); ME=null; resetNotificationRuntime(); renderLogin(); toast("Сессия завершена, войдите снова", true); return true; } toast((e&&e.error)||"Ошибка", true); return false; }
 
   async function sendMessage(){
     const ta=el("msgText"); if(!ta) return; const text=ta.value.trim();
@@ -1685,13 +1890,13 @@
     try{ await api("/api/users/"+uid,"DELETE"); await refresh(); toast("Пользователь удалён"); } catch(e){ handleAuthErr(e); }
   }
   async function resetAll(){ if(!confirm("Сбросить весь сценарий к исходному состоянию? Все сообщения, задачи и созданные аккаунты будут потеряны, и вы выйдете из системы.")) return;
-    try{ await api("/api/reset","POST",{}); toast("Сценарий сброшен"); ME=null; renderLogin(); } catch(e){ handleAuthErr(e); }
+    try{ await api("/api/reset","POST",{}); toast("Сценарий сброшен"); ME=null; resetNotificationRuntime(); renderLogin(); } catch(e){ handleAuthErr(e); }
   }
   async function doLogout(){
     // напрямую, минуя apiBusy-замок — иначе выход мог бы «не дойти» до сервера,
     // а UI бы очистился, оставив живую сессию.
     try{ await fetch("/api/logout",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:"{}"}); }catch(e){}
-    ME=null; S=null; SENSOR_UI.data=null; SENSOR_UI.error=null; SENSOR_UI.loading=false; stopPoll(); stopClock(); stopTimeSync(); renderLogin();
+    ME=null; S=null; SENSOR_UI.data=null; SENSOR_UI.error=null; SENSOR_UI.loading=false; stopPoll(); stopClock(); stopTimeSync(); resetNotificationRuntime(); renderLogin();
   }
 
   /* ---- News ---- */
@@ -1840,18 +2045,26 @@
       const dirty = [...document.querySelectorAll('#main input, #main textarea')].some(x=>x.value && String(x.value).trim()!=="");
       try{
         const oldVer = S && S.version;
-        const fresh=await api("/api/state"); S=fresh; ME=S.me; CAPS=S.caps;
+        const fresh=await api("/api/state");
         if(fresh.version === oldVer) return;               // данные не изменились — ничего не перерисовываем (сохраняем прокрутку/выделение)
-        renderRail(); renderSide();
+        const alerts=processNotificationState(fresh); S=fresh; ME=S.me; CAPS=S.caps;
+        renderRail(); renderTop(); renderSide(); renderNotificationPanel(); announceNotifications(alerts);
         if(!typing && !dirty && !formView) renderMain();   // основную область не пересобираем, пока заполняют форму
-      }catch(e){ if(e&&e.status===401){ stopPoll(); ME=null; renderLogin(); } }
+      }catch(e){ if(e&&e.status===401){ stopPoll(); ME=null; resetNotificationRuntime(); renderLogin(); } }
     }, 5000); }
   function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
 
   /* ---------------- Event delegation ---------------- */
   document.addEventListener("click", (e)=>{
-    const t=e.target.closest("[data-view],[data-filter],[data-ctype],[data-send-msg],[data-verify],[data-reject],[data-msg-task],[data-new-task],[data-task-start],[data-task-done],[data-task-save],[data-modal-close],[data-modal-bg],[data-mapobj],[data-toggle-theme],[data-logout],[data-new-user],[data-user-save],[data-urole],[data-udept],[data-upass],[data-utoggle],[data-udel],[data-pass-save],[data-reset-all],[data-new-news],[data-news-save],[data-del-news],[data-import-news],[data-new-sched],[data-sched-save],[data-del-sched],[data-edit-sched],[data-import-sched],[data-import-save],[data-show-license],[data-auth-tab],[data-show-terms],[data-dept-sel],[data-chan-send],[data-fin-send],[data-del-msg],[data-del-chan],[data-portal-open],[data-portal-go],[data-new-group],[data-group-save],[data-group-sel],[data-group-send],[data-del-group],[data-del-group-msg],[data-group-members],[data-group-add-save],[data-group-mute],[data-group-remove],[data-sensor-refresh],[data-sensor-type],[data-sensor-id]");
+    const t=e.target.closest("[data-view],[data-filter],[data-ctype],[data-send-msg],[data-verify],[data-reject],[data-msg-task],[data-new-task],[data-task-start],[data-task-done],[data-task-save],[data-modal-close],[data-modal-bg],[data-mapobj],[data-toggle-theme],[data-logout],[data-new-user],[data-user-save],[data-urole],[data-udept],[data-upass],[data-utoggle],[data-udel],[data-pass-save],[data-reset-all],[data-new-news],[data-news-save],[data-del-news],[data-import-news],[data-new-sched],[data-sched-save],[data-del-sched],[data-edit-sched],[data-import-sched],[data-import-save],[data-show-license],[data-auth-tab],[data-show-terms],[data-dept-sel],[data-chan-send],[data-fin-send],[data-del-msg],[data-del-chan],[data-portal-open],[data-portal-go],[data-new-group],[data-group-save],[data-group-sel],[data-group-send],[data-del-group],[data-del-group-msg],[data-group-members],[data-group-add-save],[data-group-mute],[data-group-remove],[data-sensor-refresh],[data-sensor-type],[data-sensor-id],[data-notify-toggle],[data-notify-close],[data-notify-read-all],[data-notify-clear],[data-notify-open],[data-notify-browser],[data-notify-setting]");
     if(!t) return;
+    if(t.hasAttribute("data-notify-toggle")){ toggleNotificationPanel(); return; }
+    if(t.hasAttribute("data-notify-close")){ toggleNotificationPanel(false); return; }
+    if(t.hasAttribute("data-notify-read-all")){ markAllNotificationsRead(); return; }
+    if(t.hasAttribute("data-notify-clear")){ clearNotifications(); return; }
+    if(t.hasAttribute("data-notify-open")){ openNotification(t.getAttribute("data-notify-open")); return; }
+    if(t.hasAttribute("data-notify-browser")){ enableBrowserNotifications(); return; }
+    if(t.hasAttribute("data-notify-setting")){ toggleNotificationSetting(t.getAttribute("data-notify-setting")); return; }
     if(t.hasAttribute("data-view")){ U.view=t.getAttribute("data-view"); saveUI(); renderRail(); renderMain(); animateMain(); return; }
     if(t.hasAttribute("data-show-license")){ licenseModal(); return; }
     if(t.hasAttribute("data-auth-tab")){ authTab=t.getAttribute("data-auth-tab"); renderLogin(); return; }

@@ -33,3 +33,6 @@ jobs:
 
       - name: NIMPH parser test
         run: python tests/test_sensor_parser.py
+
+      - name: Frontend JavaScript check
+        run: node tests/check_embedded_js.js
